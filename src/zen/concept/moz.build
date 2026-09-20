@@ -1,0 +1,11 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+EXTRA_JS_MODULES.zen.concept += [
+    "ConceptModel.sys.mjs",
+    "ConceptStore.sys.mjs",
+]
+FINAL_TARGET_FILES.actors += [
+    "actors/ConceptCursorChild.sys.mjs",
+    "actors/ConceptCursorParent.sys.mjs",
+]

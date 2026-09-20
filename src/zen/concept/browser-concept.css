@@ -1,0 +1,430 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+:root[browser-concept] {
+  color-scheme: dark;
+  --zen-primary-color: #a7b6d8;
+  --zen-main-browser-background: #18191f;
+  --zen-themed-toolbar-bg: #191a21;
+  --toolbar-bgcolor: #191a21;
+  --toolbar-color: #e7e9f1;
+  --lwt-text-color: #e7e9f1;
+  --lwt-accent-color: #191a21;
+  --sidebar-background-color: #1b1c23;
+  --sidebar-text-color: #e7e9f1;
+  --zen-main-browser-background-toolbar: #191a21;
+}
+:root[browser-concept] #zen-appcontent-navbar-container {
+  min-height: 0 !important;
+  height: 0 !important;
+  overflow: visible !important;
+}
+:root[browser-concept] {
+  --zen-main-browser-background: #18191f !important;
+  --zen-main-browser-background-toolbar: #18191f !important;
+  --zen-main-browser-background-old: #18191f !important;
+  --zen-main-browser-background-toolbar-old: #18191f !important;
+  --zen-themed-toolbar-bg-transparent: #18191f !important;
+}
+:root[browser-concept] #navigator-toolbox {
+  background: #18191f !important;
+}
+:root[browser-concept] #urlbar:not([focused]):not([open]) {
+  opacity: 0;
+  pointer-events: none;
+}
+:root[browser-concept] .zen-current-workspace-indicator-name,
+:root[browser-concept] .zen-current-workspace-indicator,
+:root[browser-concept] #zen-workspaces-button {
+  display: none !important;
+}
+.concept-root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10000;
+  font: 13px system-ui;
+  color: #ededf3;
+}
+.concept-root button,
+.concept-agent-panel button,
+.concept-cursor-body button,
+.concept-navigation button,
+.concept-agent-dock button {
+  font: inherit;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+  background: transparent;
+  border-radius: 8px;
+  padding: 7px 10px;
+}
+.concept-root button:focus-visible,
+.concept-cursor-body button:focus-visible {
+  outline: 2px solid #89b8ff;
+  outline-offset: 2px;
+}
+.concept-notch-trigger {
+  pointer-events: auto;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 31px;
+  background: #000 !important;
+  border-radius: 0 0 15px 15px !important;
+  text-align: left;
+  padding: 4px 18px !important;
+  font-size: 15px !important;
+  box-shadow: 0 4px 10px #0004;
+}
+.concept-notch-trigger:after {
+  content: "✦";
+  float: right;
+  color: #afbbca;
+  font-size: 12px;
+}
+.concept-shelf {
+  pointer-events: auto;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: min(680px, 80vw);
+  padding: 17px 17px 16px;
+  background: #030303;
+  border-radius: 0 0 24px 24px;
+  box-shadow: 0 12px 32px #0006;
+}
+.concept-shelf:before,
+.concept-shelf:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 30px;
+  height: 35px;
+  background: transparent;
+  pointer-events: none;
+}
+.concept-shelf:before {
+  right: 100%;
+  border-radius: 0 30px 0 0;
+  box-shadow: 10px -10px 0 8px #030303;
+}
+.concept-shelf:after {
+  left: 100%;
+  border-radius: 30px 0 0 0;
+  box-shadow: -10px -10px 0 8px #030303;
+}
+.concept-shelf[hidden],
+.concept-pin-card[hidden],
+.concept-agent-panel[hidden] {
+  display: none !important;
+}
+.concept-shelf-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 11px;
+}
+.concept-shelf-top > button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: #252528;
+  color: #b9b9c4;
+  border-radius: 50%;
+}
+.concept-pin-search {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  color: #ddd;
+  border: 0;
+  font: 12px system-ui;
+  padding: 5px;
+}
+.concept-space-icons {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 39px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+.concept-space-icons button {
+  background: #222226;
+  color: #aaaab6;
+  height: 35px;
+  min-width: 39px;
+}
+.concept-space-icons button[aria-pressed="true"] {
+  background: #ededf1;
+  color: #161619;
+}
+.concept-pin-cards {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+  min-height: 106px;
+  padding: 3px 0;
+}
+.concept-pin-card {
+  flex-shrink: 0;
+  width: 118px;
+  height: 108px;
+  background: #26262c !important;
+  border: 1px solid #3c3c44 !important;
+  padding: 10px !important;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.concept-pin-card:hover {
+  background: #30303a !important;
+  border-color: #636473 !important;
+}
+.concept-site-icon,
+.concept-folder-icon {
+  display: grid;
+  place-items: center;
+  height: 58px;
+  width: 100%;
+  font-size: 50px;
+  color: #91aee4;
+}
+.concept-site-icon img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+.concept-folder-icon {
+  text-shadow: 0 -5px #6d85b5;
+}
+.concept-pin-label {
+  display: block;
+  max-width: 96px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 11px;
+}
+.concept-empty {
+  padding: 15px;
+  color: #898995;
+  font-size: 12px;
+}
+.concept-address {
+  pointer-events: auto;
+  position: absolute;
+  top: 5px;
+  right: calc(50% + 115px);
+  max-width: 200px;
+  background: #22232be8 !important;
+  color: #b6b9c6 !important;
+  font-size: 10px !important;
+  padding: 5px 10px !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.concept-root.open .concept-address {
+  visibility: hidden;
+}
+.concept-navigation {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+.concept-navigation button {
+  font-size: 20px;
+  color: #c1c5d0;
+  padding: 2px 8px;
+}
+.concept-agent-dock {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  min-height: 48px;
+  padding: 4px 12px;
+  margin-top: auto;
+  color: #a6adbf;
+}
+.concept-dock-title {
+  font: 11px system-ui;
+  margin-right: auto;
+}
+.concept-saved-agent {
+  color: #bfa3e6 !important;
+  font-size: 20px !important;
+  padding: 4px !important;
+}
+#concept-cursor-panel {
+  --panel-background: #24252def;
+  --panel-color: #f0f0f6;
+  --panel-border-color: #535764;
+  --panel-border-radius: 13px;
+}
+.concept-cursor-body {
+  padding: 8px;
+  font: 12px system-ui;
+  color: #f0f0f6;
+}
+.concept-cursor-body.selection {
+  display: flex;
+  gap: 3px;
+  padding: 5px;
+}
+.concept-cursor-body button:hover {
+  background: #424553;
+}
+.concept-quick-prompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 310px;
+}
+.concept-quick-prompt input {
+  background: none;
+  border: 0;
+  color: #f0f0f5;
+  flex: 1;
+  min-width: 0;
+  font: 13px system-ui;
+}
+.concept-task-light {
+  display: block;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse,
+    #edf5ff 0%,
+    #7daaff 25%,
+    #6791f080 48%,
+    transparent 72%
+  );
+  filter: blur(3px);
+}
+.concept-agent-panel {
+  position: fixed;
+  z-index: 9999;
+  right: 8px;
+  top: 10px;
+  bottom: 8px;
+  width: 340px;
+  box-sizing: border-box;
+  background: #202127;
+  border: 1px solid #3b3e49;
+  border-radius: 14px;
+  padding: 15px;
+  color: #e0e3ed;
+  font: 13px system-ui;
+  box-shadow: -15px 0 40px #0003;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.concept-agent-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.concept-agent-header button {
+  margin-left: auto;
+}
+.concept-agent-source {
+  font-size: 11px;
+  color: #939eb4;
+}
+.concept-agent-panel blockquote {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+  border-left: 2px solid #6982b8;
+  padding-left: 12px;
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+.concept-agent-input {
+  min-height: 100px;
+  border: 1px solid #454957;
+  border-radius: 10px;
+  padding: 10px;
+  background: #282a33;
+  color: #f0f0f6;
+  font: 13px system-ui;
+  resize: vertical;
+}
+.concept-persistent {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+}
+.concept-primary {
+  background: #bacbf1 !important;
+  color: #1a2232 !important;
+}
+.concept-agent-connection {
+  font-size: 12px;
+  color: #a3acbe;
+  line-height: 1.6;
+}
+.tabbrowser-tab[concept-agent-working] {
+  position: relative;
+  isolation: isolate;
+}
+.tabbrowser-tab[concept-agent-working] .tab-background {
+  background: color-mix(
+    in srgb,
+    var(--concept-agent-color) 27%,
+    #252736
+  ) !important;
+  box-shadow:
+    0 0 19px 3px color-mix(in srgb, var(--concept-agent-color) 55%, transparent),
+    inset 0 0 15px
+      color-mix(in srgb, var(--concept-agent-color) 25%, transparent) !important;
+  outline: 1px solid
+    color-mix(in srgb, var(--concept-agent-color) 62%, transparent) !important;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .concept-root.open .concept-shelf {
+    animation: concept-open 180ms ease-out;
+  }
+  @keyframes concept-open {
+    from {
+      opacity: 0;
+      translate: 0 -8px;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+}
+
+.concept-cursor-popover {
+  position: fixed;
+  z-index: 10020;
+  border: 1px solid #535764;
+  border-radius: 12px;
+  background: #24252d;
+  color: #f0f0f6;
+  box-shadow: 0 6px 25px #0006;
+}
+.concept-cursor-popover[hidden] {
+  display: none !important;
+}
+
+.concept-site-icon img {
+  background: #e6e8ef;
+  border-radius: 8px;
+  padding: 5px;
+  box-sizing: content-box;
+}

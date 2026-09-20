@@ -35,3 +35,10 @@ build/signing/private_key.pem
 build/signing/private_key.p12
 
 bloat-dump.log
+
+# Isolated development profile; never publish browser data.
+.concept-profile/
+concept-dev.log
+concept-import.log
+concept-bootstrap.log
+concept-build.log

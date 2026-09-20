@@ -19,6 +19,23 @@ let JSPROCESSACTORS = {};
  * available at https://firefox-source-docs.mozilla.org/dom/ipc/jsactors.html
  */
 let JSWINDOWACTORS = {
+  ConceptCursor: {
+    parent: { esModuleURI: "resource:///actors/ConceptCursorParent.sys.mjs" },
+    child: {
+      esModuleURI: "resource:///actors/ConceptCursorChild.sys.mjs",
+      events: {
+        mousemove: { capture: true },
+        mouseup: { capture: true },
+        keyup: { capture: true },
+        selectionchange: { capture: true },
+      },
+    },
+    allFrames: true,
+    matches: ["http://*/*", "https://*/*"],
+    remoteTypes: ["web"],
+    enablePreference: "browser.concept.enabled",
+    safeForUntrustedWebProcess: true,
+  },
   ZenModsMarketplace: {
     parent: {
       esModuleURI: "resource:///actors/ZenModsMarketplaceParent.sys.mjs",
