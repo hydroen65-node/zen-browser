@@ -58,3 +58,13 @@ Design review compared the native source screenshot with the 1410 × 825 closed/
 The final local package replaces visible in-window Nightly labels with Sierra. macOS still exposes Nightly as the application-menu name from compiled upstream branding; release branding is a remaining build task.
 
 Still unverified: physical shake without clicking, selection placement at several zoom levels, private and simultaneous windows, split view, compact mode and every upstream feature. Autonomous agent task execution, a model harness, background scheduling and credential brokering remain unimplemented.
+
+# Live continuation — 2026-09-23
+
+The page-read gate now accepts cancellation, releases the tab claim immediately when stopped, and checks ownership again before returning a result. The native browser aborts a read when its tab closes, another tab is selected, the URL changes, or the active space changes. The agent panel exposes Stop only while a read is active. Seventeen offline checks pass, including cancellation during a read, cancellation before dispatch and rejection of a result after tab ownership is reclaimed.
+
+Native Sierra Dev checks: the idle panel does not show Stop; declining the browser permission prompt records “Permission declined” without reading the page. Native Sierra Source checks after rebuilding: the permission prompt still appears and approval completed a bounded MDN page snapshot. A synthetic slow native read was not run, so the fleeting Stop and active glow were verified by model tests and code review rather than a captured native frame.
+
+Design review found a narrow-window defect: the fixed-width panel left an unusable sliver of the website visible. Below 760px it now takes the content area while leaving the native sidebar accessible; the redesigned state was re-rendered in both Sierra Dev and Sierra Source. The source build needed a minimum left offset so the panel did not cover the sidebar's trailing controls; `design/native-narrow-agent-source-2026-09-23.jpg` shows the final alignment. Full desktop panel sizing is unchanged. The model harness, autonomous execution and broader upstream regression checks remain outstanding.
+
+Shutdown limitation found during rebuilds: after confirming Sierra's native Quit dialog, the isolated process sometimes remained alive and blocked replacement of the test bundle. The exact isolated process was terminated before rebuilding; the installed Zen app was untouched. The cause and a normal-quit regression test remain open.

@@ -17,7 +17,7 @@ class BrowserConcept {
     this.path = [];
     this.onEvent = this.handleEvent.bind(this);
     this.ownership = new AgentOwnership();
-    this.runningTools = new Set();
+    this.runningTools = new Map();
     this.toolHistory = new Map();
     this.toolGate = new AgentToolGate(this.ownership, (tool, tab) =>
       this.performBrowserTool(tool, tab),
@@ -229,6 +229,9 @@ class BrowserConcept {
   }
   handleEvent(event) {
     if (event.type === "TabClose") {
+      for (const operation of this.runningTools.values()) {
+        if (operation.tab === event.target) operation.controller.abort();
+      }
       this.ownership.close(event.target);
       return;
     }
@@ -238,8 +241,23 @@ class BrowserConcept {
       event.type === "ZenWorkspacesUIUpdate"
     ) {
       if (event.type === "TabAttrModified") {
+        for (const operation of this.runningTools.values()) {
+          if (
+            operation.tab === event.target &&
+            safeWebURL(operation.tab.linkedBrowser.currentURI.spec) !==
+              operation.url
+          )
+            operation.controller.abort();
+        }
         this.updateAddress();
         return;
+      }
+      for (const operation of this.runningTools.values()) {
+        if (
+          operation.tab !== this.win.gBrowser.selectedTab ||
+          operation.spaceId !== this.spaceId
+        )
+          operation.controller.abort();
       }
       this.panel.hidePopup();
       if (event.type === "ZenWorkspacesUIUpdate") this.path = [];
@@ -324,8 +342,15 @@ class BrowserConcept {
       controls.message.textContent = "Open this task’s page to inspect it.";
       return;
     }
-    this.runningTools.add(agent.id);
+    const controller = new AbortController();
+    this.runningTools.set(agent.id, {
+      controller,
+      tab,
+      spaceId: context.spaceId,
+      url: sourceURL,
+    });
     controls.button.disabled = true;
+    controls.stop.hidden = false;
     controls.status.textContent = "Waiting";
     const event = this.node("div", "concept-tool-event");
     event.append(
@@ -344,6 +369,7 @@ class BrowserConcept {
         active: true,
         tool: "browser.page.snapshot",
         isCurrent,
+        signal: controller.signal,
         authorize: () =>
           Services.prompt.confirm(
             this.win,
@@ -383,17 +409,23 @@ class BrowserConcept {
           "Page inspected locally. The agent model is not connected yet.";
       }
     } catch (error) {
-      console.error("Agent page inspection failed:", error);
+      if (error.message !== "Tool cancelled")
+        console.error("Agent page inspection failed:", error);
       controls.status.textContent = "Saved";
       event.querySelector(".concept-tool-event-state").textContent =
-        "Could not read page";
-      controls.message.textContent = "Could not inspect this page.";
+        error.message === "Tool cancelled" ? "Stopped" : "Could not read page";
+      controls.message.textContent =
+        error.message === "Tool cancelled"
+          ? "Page read stopped."
+          : "Could not inspect this page.";
+      outcome = error.message === "Tool cancelled" ? "Stopped" : outcome;
     } finally {
       if (activated) this.setAgentActivity(tab, agent, { working: false });
       this.runningTools.delete(agent.id);
       if (!this.runningTools.size)
         this.dock.removeAttribute("concept-agent-active");
       controls.button.disabled = false;
+      controls.stop.hidden = true;
       const history = this.toolHistory.get(agent.id) || [];
       history.push(outcome);
       this.toolHistory.set(agent.id, history.slice(-10));
@@ -753,13 +785,19 @@ class BrowserConcept {
       () =>
         this.inspectAgentPage(existingAgent, context, {
           button: inspect,
+          stop,
           message,
           status,
           trace,
         }),
     );
     inspect.disabled = !existingAgent;
-    toolHeader.append(inspect);
+    const stop = this.button("Stop", "Stop page read", () => {
+      this.runningTools.get(existingAgent?.id)?.controller.abort();
+    });
+    stop.hidden = !this.runningTools.has(existingAgent?.id);
+    if (!stop.hidden) inspect.disabled = true;
+    toolHeader.append(inspect, stop);
     const trace = this.node("div", "concept-tool-trace");
     trace.setAttribute("role", "log");
     trace.setAttribute("aria-live", "polite");

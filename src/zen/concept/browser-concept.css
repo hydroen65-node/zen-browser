@@ -865,6 +865,21 @@
   .concept-address {
     display: none;
   }
+  .concept-agent-panel {
+    left: max(
+      calc(
+        var(--actual-zen-sidebar-width, var(--zen-sidebar-width, 220px)) + 4px
+      ),
+      236px
+    );
+    right: 8px;
+    width: auto;
+  }
+}
+@media (max-width: 540px) {
+  .concept-agent-panel {
+    left: 8px;
+  }
 }
 /* Input focus stays visible without a second rounded box inside the prompt. */
 .concept-pin-search:focus-visible {

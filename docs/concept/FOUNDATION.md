@@ -30,7 +30,7 @@ The first source app assembled from the raw developer layout launched with unlab
 - Cursor content actor for selection dwell and deliberate pointer shake. Parent only accepts the selected tab in the active browser window. Form controls and editable content are excluded from normal gesture targeting.
 - Selection actions and a small prompt leading into the native right context panel. Context is a local snapshot; nothing is sent to a model.
 - Explicitly pending task drafts. Persistent/ephemeral identity and stronger working-tab glow styles are prepared; no draft pretends to be a running agent.
-- A first read-only `browser.page.snapshot` tool uses the native content actor to return bounded page title, URL and visible text. The browser asks before reading the active tab, gates the call through tab ownership, checks page/space identity again after the read, releases ownership and shows a local activity event. It does not contact a model or run the saved task.
+- A first read-only `browser.page.snapshot` tool uses the native content actor to return bounded page title, URL and visible text. The browser asks before reading the active tab, gates the call through tab ownership, checks page/space identity again after the read, releases ownership and shows a local activity event. In-flight reads can be stopped or interrupted by tab closure, tab switch, navigation or space switch; late results are discarded. It does not contact a model or run the saved task.
 
 ## Next implementation work
 

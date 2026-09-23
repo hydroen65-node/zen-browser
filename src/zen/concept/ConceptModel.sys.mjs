@@ -120,6 +120,7 @@ export class AgentToolGate {
     authorize,
     isCurrent,
     onAuthorized,
+    signal,
   }) {
     if (tool !== "browser.page.snapshot")
       throw new Error("Unknown browser tool");
@@ -131,18 +132,43 @@ export class AgentToolGate {
       typeof isCurrent !== "function"
     )
       throw new Error("Invalid tool context");
+    const checkCancelled = () => {
+      if (signal?.aborted) throw new Error("Tool cancelled");
+    };
+    checkCancelled();
     if (!isCurrent()) throw new Error("Page context changed");
     const claim = this.ownership.request(tab, agentId, spaceId, { active });
     try {
       if (claim.state === "awaiting-permission") {
         if (!(await authorize())) return { status: "denied" };
+        checkCancelled();
         if (!isCurrent()) throw new Error("Page context changed");
         this.ownership.allow(tab, agentId);
       }
       this.ownership.assertAllowed(tab, agentId, spaceId);
+      checkCancelled();
       if (!isCurrent()) throw new Error("Page context changed");
       onAuthorized?.();
-      const result = await this.perform(tool, tab);
+      checkCancelled();
+      let abort;
+      let result;
+      try {
+        const work = Promise.resolve(this.perform(tool, tab));
+        result = signal
+          ? await Promise.race([
+              work,
+              new Promise((_, reject) => {
+                abort = () => reject(new Error("Tool cancelled"));
+                signal.addEventListener("abort", abort, { once: true });
+                if (signal.aborted) abort();
+              }),
+            ])
+          : await work;
+      } finally {
+        if (abort) signal.removeEventListener("abort", abort);
+      }
+      checkCancelled();
+      this.ownership.assertAllowed(tab, agentId, spaceId);
       if (!isCurrent()) throw new Error("Page context changed");
       return { status: "completed", result };
     } finally {

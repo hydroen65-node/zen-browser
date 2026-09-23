@@ -174,3 +174,78 @@ test("browser tool discards a result when the page changes during the read", asy
   );
   assert.equal(ownership.tabs.size, 0);
 });
+
+test("stopping an in-flight browser tool releases tab ownership", async () => {
+  const ownership = new AgentOwnership();
+  const controller = new AbortController();
+  const tab = {};
+  let workStarted;
+  const started = new Promise((resolve) => (workStarted = resolve));
+  let finishWork;
+  const gate = new AgentToolGate(ownership, () => {
+    workStarted();
+    return new Promise((resolve) => (finishWork = resolve));
+  });
+  const pending = gate.invoke({
+    agentId: "agent",
+    spaceId: "space",
+    tab,
+    active: true,
+    tool: "browser.page.snapshot",
+    authorize: async () => true,
+    isCurrent: () => true,
+    signal: controller.signal,
+  });
+  await started;
+  controller.abort();
+  await assert.rejects(pending, /Tool cancelled/);
+  assert.equal(ownership.tabs.size, 0);
+  finishWork({ text: "discarded" });
+});
+
+test("a reclaimed tab cannot return a tool result", async () => {
+  const ownership = new AgentOwnership();
+  const tab = {};
+  let workStarted;
+  const started = new Promise((resolve) => (workStarted = resolve));
+  let finishWork;
+  const gate = new AgentToolGate(ownership, () => {
+    workStarted();
+    return new Promise((resolve) => (finishWork = resolve));
+  });
+  const pending = gate.invoke({
+    agentId: "agent",
+    spaceId: "space",
+    tab,
+    active: true,
+    tool: "browser.page.snapshot",
+    authorize: async () => true,
+    isCurrent: () => true,
+  });
+  await started;
+  ownership.reclaim(tab);
+  finishWork({ text: "discarded" });
+  await assert.rejects(pending, /Tab control is not authorized/);
+});
+
+test("cancellation before dispatch never starts a browser tool", async () => {
+  const controller = new AbortController();
+  let started = false;
+  const gate = new AgentToolGate(new AgentOwnership(), async () => {
+    started = true;
+  });
+  await assert.rejects(() =>
+    gate.invoke({
+      agentId: "agent",
+      spaceId: "space",
+      tab: {},
+      active: true,
+      tool: "browser.page.snapshot",
+      authorize: async () => true,
+      isCurrent: () => true,
+      onAuthorized: () => controller.abort(),
+      signal: controller.signal,
+    }),
+  );
+  assert.equal(started, false);
+});
