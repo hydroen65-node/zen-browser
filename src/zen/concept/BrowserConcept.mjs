@@ -8,6 +8,10 @@ import {
 } from "resource:///modules/zen/concept/ConceptModel.sys.mjs";
 
 import { ConceptStore } from "resource:///modules/zen/concept/ConceptStore.sys.mjs";
+import {
+  AgentRun,
+  localPageInspection,
+} from "resource:///modules/zen/concept/AgentRun.sys.mjs";
 
 const HTML = "http://www.w3.org/1999/xhtml";
 class BrowserConcept {
@@ -362,43 +366,54 @@ class BrowserConcept {
     let activated = false;
     let outcome = "Could not read page";
     try {
-      const response = await this.toolGate.invoke({
-        agentId: agent.id,
-        spaceId: context.spaceId,
-        tab,
-        active: true,
-        tool: "browser.page.snapshot",
-        isCurrent,
-        signal: controller.signal,
-        authorize: () =>
-          Services.prompt.confirm(
-            this.win,
-            "Use this tab?",
-            `Allow “${agent.name}” to read the text of “${tab.label}”?`,
-          ),
-        onAuthorized: () => {
-          this.setAgentActivity(tab, agent, {
-            working: true,
-            color: this.agentColor(agent),
-          });
-          activated = true;
-          this.dock.setAttribute("concept-agent-active", "true");
-          controls.status.textContent = "Reading page";
-          event.querySelector(".concept-tool-event-state").textContent =
-            "Reading page";
+      const run = new AgentRun({
+        invokeTool: (tool, signal) =>
+          this.toolGate.invoke({
+            agentId: agent.id,
+            spaceId: context.spaceId,
+            tab,
+            active: true,
+            tool,
+            isCurrent,
+            signal,
+            authorize: () =>
+              Services.prompt.confirm(
+                this.win,
+                "Use this tab?",
+                `Allow “${agent.name}” to read the text of “${tab.label}”?`,
+              ),
+            onAuthorized: () => {
+              this.setAgentActivity(tab, agent, {
+                working: true,
+                color: this.agentColor(agent),
+              });
+              activated = true;
+              this.dock.setAttribute("concept-agent-active", "true");
+              controls.status.textContent = "Reading page";
+              event.querySelector(".concept-tool-event-state").textContent =
+                "Reading page";
+            },
+          }),
+        onEvent: (entry) => {
+          if (entry.type === "tool-finished")
+            event.querySelector(".concept-tool-event-state").textContent =
+              entry.status === "denied"
+                ? "Permission declined"
+                : `${entry.characters.toLocaleString()} chars`;
         },
       });
+      const { lastToolResult: response } = await run.run(
+        localPageInspection(),
+        { signal: controller.signal },
+      );
       if (response.status === "denied") {
         outcome = "Permission declined";
         controls.status.textContent = "Saved";
-        event.querySelector(".concept-tool-event-state").textContent =
-          "Permission declined";
         controls.message.textContent = "Tab access was declined.";
       } else {
         const page = response.result;
-        outcome = `${page.text.length.toLocaleString()} characters read`;
+        outcome = `${page.text.length.toLocaleString()} chars`;
         controls.status.textContent = "Page ready";
-        event.querySelector(".concept-tool-event-state").textContent = outcome;
         const details = this.node("details", "concept-tool-output");
         details.append(
           this.node("summary", "", page.title || "Page text"),

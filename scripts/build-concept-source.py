@@ -76,9 +76,12 @@ def build():
         with read_omni(contents / 'Resources/browser/omni.ja') as archive:
             module = archive.read('chrome/browser/content/browser/zen-components/BrowserConcept.mjs')
             stylesheet = archive.read('chrome/browser/content/browser/zen-styles/browser-concept.css')
+            agent_run = archive.read('modules/zen/concept/AgentRun.sys.mjs')
         for content, name in ((module, 'BrowserConcept.mjs'), (stylesheet, 'browser-concept.css')):
             if content != (ROOT / 'src/zen/concept' / name).read_bytes():
                 raise SystemExit('UI package is stale. Run npm run build:ui, then cd engine && ./mach package.')
+        if agent_run != (ROOT / 'src/zen/concept/AgentRun.sys.mjs').read_bytes():
+            raise SystemExit('Agent runner package is stale. Run npm run build:ui, then cd engine && ./mach package.')
         info_path = contents / 'Info.plist'
         info = plistlib.loads(info_path.read_bytes())
         info.update(CFBundleIdentifier='local.browserconcept.sierra-source',

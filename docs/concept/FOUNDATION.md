@@ -31,10 +31,11 @@ The first source app assembled from the raw developer layout launched with unlab
 - Selection actions and a small prompt leading into the native right context panel. Context is a local snapshot; nothing is sent to a model.
 - Explicitly pending task drafts. Persistent/ephemeral identity and stronger working-tab glow styles are prepared; no draft pretends to be a running agent.
 - A first read-only `browser.page.snapshot` tool uses the native content actor to return bounded page title, URL and visible text. The browser asks before reading the active tab, gates the call through tab ownership, checks page/space identity again after the read, releases ownership and shows a local activity event. In-flight reads can be stopped or interrupted by tab closure, tab switch, navigation or space switch; late results are discarded. It does not contact a model or run the saved task.
+- A bounded agent-run protocol now routes that local read through typed tool requests and activity events. The browser accepts only `browser.page.snapshot` without arguments, rejects duplicate requests and excessive calls, and stops after denied permission. The current driver is a deterministic local fixture; the saved prompt is still not executed by a model.
 
 ## Next implementation work
 
-1. Attach an existing agent harness behind a narrow local bridge. Define typed task events and tool requests; no arbitrary browser-chrome evaluation. Build replayable offline fixtures before live calls.
+1. Attach an existing agent harness behind the narrow local run protocol. The installed Codex CLI exposes a local app-server protocol, but no process bridge or model calls are connected yet. Keep browser tools allowlisted and browser-owned; do not expose arbitrary chrome evaluation. Expand replayable offline fixtures before live calls.
 2. Extend the existing read-only ownership gate to every future tool action and user interruption, tab navigation, tab closure, workspace changes and agent cancellation. Permission state must live in the trusted browser, never the model.
 3. Implement real task lifecycle, agent-owned groups, per-space memory, named persistent agents, cancellation, recovery and truthful activity traces. Show actions and concise progress summaries, not hidden model reasoning.
 4. Add link-provenance Trails independently of Zen's manual folders. Test source-tab inheritance, standalone new tabs, pinning and moving between spaces. Preserve native folder behavior while adding provenance.
