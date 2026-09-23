@@ -19,4 +19,3 @@ def read_omni(path):
         if data[start:start+4]!=b'PK\x01\x02':raise ValueError('Invalid central directory')
         record[6]=end
         return zipfile.ZipFile(io.BytesIO(data[:end]+data[start:start+size]+struct.pack('<4s4H2IH',*record)))
-
