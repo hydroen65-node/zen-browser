@@ -16,8 +16,27 @@ Tested on the isolated Sierra Dev app using the installed Zen 1.21.16b engine. T
 
 Not yet verified: a real pointer-shake gesture through native automation (the available native tool does not offer mouse movement without clicking); selection geometry at multiple zoom levels/displays; private windows and simultaneous-window UI flows; split view/compact mode; every retained upstream feature. Agent-coloured tab lighting has no real execution backend to drive yet. No task execution is claimed.
 
-Full source: Firefox 156 downloaded and initialized; initial Zen import succeeded; compiler bootstrap succeeded without system configuration changes. The source compile is underway with two jobs, not yet a finished distributable. `concept-build.log` records its output. Local `mozconfig` disables debug symbols and compiled tests for this initial engine build. The offline concept tests run separately.
+Full source: Firefox 156 downloaded and initialized; initial Zen import succeeded; compiler bootstrap succeeded without system configuration changes. The source compile finished successfully with two jobs (95 minutes). The first source-built app launches but has a localization initialization issue; it is not a finished distributable. `concept-build.log` records its output. Local `mozconfig` disables debug symbols and compiled tests for this initial engine build. The offline concept tests run separately.
 
 The second wholesale `npm run import` encountered already-applied upstream patches. Do not repeatedly apply patches to the existing engine tree. Existing overlay files are symlinked from `src`; when adding a file, link it into the generated engine overlay as well, or reset/reimport the engine only when needed with appropriate care. A fresh checkout uses the normal initial download/import/bootstrap sequence.
 
 Fork Actions are disabled and zero workflow runs were reported. No live model calls or cloud builds were made.
+
+
+# Native design correction — 2026-09-22
+
+Taste design target and element/state inventory: `design/REVIEW.md`, with closed/open full-window target images. The native implementation was reviewed against the supplied Supaste screenshot and those targets, using a real MDN extension-documentation page.
+
+Design review performed in Sierra Dev (installed Zen 1.21.16b engine):
+- The unused URL row is gone; Cmd+T followed by typing an HTTPS address still navigates successfully.
+- Native tabs, back/forward/reload, New Tab and downloads remain. The duplicate Create New and Clear controls are visually removed; underlying upstream commands remain.
+- Closed and open notches have curved shoulders attached to the top edge. Icons replace Unicode control symbols. The actual open notch, its empty-folder state, and breadcrumbs were inspected.
+- Pinned the real MDN page, created Architecture, opened the folder in place and pinned the page inside it. Existing development pins/tabs were retained.
+- Dock plus opens the compact prompt. Typing a task and pressing Return opens the right panel with the page title and URL captured.
+- Review defects found: cached black icons disappeared against dark cards; automatic input focus created a heavy double outline; the right panel obscured the article; two legacy task identities had the same colour. Corrections were implemented and rebuilt.
+
+Final correction re-render is pending because the Mac locked again. Specifically unverified after that final rebuild: icon backgrounds, lighter prompt focus, distinct colours, page resizing beside the panel, persistent-agent appearance, editing/resaving drafts, selection top-right positioning and collapsed-selection dismissal. Earlier screenshots must not be presented as a final render of these corrections.
+
+Code/build checks: nine offline tests pass, including active-tab/window rejection for collapsed-selection dismissal. JS syntax, Python builder syntax, formatting and diff whitespace checks pass. The rebuilt Sierra Dev app passes strict deep signature verification. UI-only source compilation succeeded; the full engine had already compiled successfully. The source app was assembled with resolved symlinks, passed signature verification and `--version`, and launched in its isolated profile; the native localization failure is recorded above. GitHub Actions remain disabled. No live model calls or cloud builds were made.
+
+Not exercised this pass: physical shake, reduced-motion setting, narrow window, private/multiple windows, split view, compact mode, every retained upstream browser feature, or real agent execution (not implemented).

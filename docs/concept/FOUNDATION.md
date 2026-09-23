@@ -16,6 +16,12 @@ The development app overlays the new source modules onto the installed Zen 1.21.
 
 The source branch is based on upstream `dev` (Firefox 156 / Zen 1.22.3b). Its engine differs from the installed overlay. Both paths must be verified before release. `browser.concept.enabled` defaults to false in source builds, and is enabled explicitly in the isolated development profile.
 
+## Locally compiled engine
+
+The full Firefox 156 / Zen source build completed successfully (95 minutes with two local jobs). Incremental UI builds use `npm run build:ui`. `python3 scripts/build-concept-source.py` assembles `dist/Sierra Source.app`, resolves build symlinks and gives it a separate `.concept-source-profile`. Do not launch the raw Nightly.app against a normal browsing profile.
+
+The source app launches, but its first native run exposed a localization initialization problem (unlabeled native controls and Fluent lookup errors). It is an experimental build, not the recommended development app yet. Continue using Sierra Dev for UI work until that runtime issue is resolved. Both builders verify their app signatures and refuse to overwrite an unrecognized or running destination.
+
 ## Implemented foundation
 
 - Dark native browser chrome and notch; Zen's native sidebar, tabs, navigation, menu, folders, extensions and other browser code remain in the fork.
@@ -35,7 +41,7 @@ The source branch is based on upstream `dev` (Firefox 156 / Zen 1.22.3b). Its en
 5. Finish notch editing, nested folder drag-and-drop, keyboard navigation, accessible tooltips, per-space identity and depth handling. Integrate ask-agent with the native New Tab prompt.
 6. Watch and ad mechanisms: retain existing Zen functionality, implement separately bounded network rules, persistent element removal and experimental DOM classification. Do not claim the unverified “Jev” model exists.
 7. Credential broker, per-agent filesystem sandbox, scheduled jobs and persistent-agent VM lifecycle. These remain unimplemented. Keep credentials outside model context and require explicit grants for added host access.
-8. Full engine build, regression coverage for retained Zen features, update/signing strategy and platform verification before distribution.
+8. Resolve source-app localization initialization, then regression coverage for retained Zen features, update/signing strategy and platform verification before distribution.
 
 ## Resource and privacy limits
 

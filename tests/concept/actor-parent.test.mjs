@@ -63,3 +63,18 @@ test("Cursor rejects malformed input and bounds text context", () => {
   assert.equal(calls[0][0].selection.length, 12000);
   assert.equal(calls[0][0].title.length, 300);
 });
+
+test("collapsed selection dismisses suggestions only in the active selected tab", () => {
+  const { win, actor } = fixture();
+  let dismissed = 0;
+  win.gBrowserConcept.hideCursorSelection = () => dismissed++;
+  actor.receiveMessage({ name: "ConceptCursor:DismissSelection" });
+  assert.equal(dismissed, 1);
+  actor.browsingContext.top.id = 2;
+  actor.receiveMessage({ name: "ConceptCursor:DismissSelection" });
+  assert.equal(dismissed, 1);
+  actor.browsingContext.top.id = 1;
+  Services.focus.activeWindow = {};
+  actor.receiveMessage({ name: "ConceptCursor:DismissSelection" });
+  assert.equal(dismissed, 1);
+});

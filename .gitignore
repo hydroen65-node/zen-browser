@@ -42,3 +42,5 @@ concept-dev.log
 concept-import.log
 concept-bootstrap.log
 concept-build.log
+.concept-source-profile/
+concept-source.log

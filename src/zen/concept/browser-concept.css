@@ -3,230 +3,413 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 :root[browser-concept] {
   color-scheme: dark;
-  --zen-primary-color: #a7b6d8;
-  --zen-main-browser-background: #18191f;
-  --zen-themed-toolbar-bg: #191a21;
-  --toolbar-bgcolor: #191a21;
-  --toolbar-color: #e7e9f1;
-  --lwt-text-color: #e7e9f1;
-  --lwt-accent-color: #191a21;
-  --sidebar-background-color: #1b1c23;
-  --sidebar-text-color: #e7e9f1;
-  --zen-main-browser-background-toolbar: #191a21;
+  --zen-primary-color: #aaaab2;
+  --zen-main-browser-background: #171719 !important;
+  --zen-main-browser-background-toolbar: #171719 !important;
+  --zen-main-browser-background-old: #171719 !important;
+  --zen-main-browser-background-toolbar-old: #171719 !important;
+  --zen-themed-toolbar-bg-transparent: #171719 !important;
+  --zen-themed-toolbar-bg: #171719;
+  --toolbar-bgcolor: #171719;
+  --toolbar-color: #c7c7cb;
+  --lwt-text-color: #c7c7cb;
+  --lwt-accent-color: #171719;
+  --sidebar-background-color: #171719;
+  --sidebar-text-color: #c7c7cb;
+  --concept-ink: #e7e7e9;
+  --concept-muted: #99999f;
+}
+:root[browser-concept] #navigator-toolbox {
+  background: #171719 !important;
+}
+/* Retain the native omnibox and its commands, but remove its resting row.
+   Zero size (not display:none) lets Cmd+L and the site title focus it. */
+:root[browser-concept] #nav-bar {
+  min-height: 0 !important;
+  height: 0 !important;
+  padding-block: 0 !important;
+  margin-block: 0 !important;
+  overflow: visible !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+:root[browser-concept] #urlbar-container {
+  min-height: 0 !important;
+  height: 0 !important;
+  margin-block: 0 !important;
+  --urlbar-container-height: 0px !important;
+}
+:root[browser-concept] #urlbar:not([focused]):not([open]) {
+  opacity: 0;
+  pointer-events: none;
 }
 :root[browser-concept] #zen-appcontent-navbar-container {
   min-height: 0 !important;
   height: 0 !important;
   overflow: visible !important;
 }
-:root[browser-concept] {
-  --zen-main-browser-background: #18191f !important;
-  --zen-main-browser-background-toolbar: #18191f !important;
-  --zen-main-browser-background-old: #18191f !important;
-  --zen-main-browser-background-toolbar-old: #18191f !important;
-  --zen-themed-toolbar-bg-transparent: #18191f !important;
-}
-:root[browser-concept] #navigator-toolbox {
-  background: #18191f !important;
-}
-:root[browser-concept] #urlbar:not([focused]):not([open]) {
-  opacity: 0;
-  pointer-events: none;
-}
-:root[browser-concept] .zen-current-workspace-indicator-name,
 :root[browser-concept] .zen-current-workspace-indicator,
-:root[browser-concept] #zen-workspaces-button {
+:root[browser-concept] #zen-current-workspace-indicator-container,
+:root[browser-concept] #zen-workspaces-button,
+:root[browser-concept] #zen-create-new-button,
+:root[browser-concept] #zen-clear-tabs-button {
   display: none !important;
+}
+:root[browser-concept] .tabbrowser-tab {
+  font-size: 13px !important;
+}
+:root[browser-concept] #tabs-newtab-button {
+  opacity: 0.65;
+  font-size: 13px !important;
+}
+:root[browser-concept] #tabs-newtab-button:hover {
+  opacity: 1;
 }
 .concept-root {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 10000;
-  font: 13px system-ui;
-  color: #ededf3;
+  font:
+    13px -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    sans-serif;
+  color: var(--concept-ink);
 }
-.concept-root button,
-.concept-agent-panel button,
-.concept-cursor-body button,
-.concept-navigation button,
-.concept-agent-dock button {
+:is(
+    .concept-root,
+    .concept-agent-panel,
+    .concept-cursor-body,
+    .concept-agent-dock
+  )
+  button {
   font: inherit;
   border: 0;
   cursor: pointer;
   color: inherit;
   background: transparent;
-  border-radius: 8px;
+  border-radius: 7px;
   padding: 7px 10px;
 }
-.concept-root button:focus-visible,
-.concept-cursor-body button:focus-visible {
-  outline: 2px solid #89b8ff;
+:is(
+    .concept-root,
+    .concept-agent-panel,
+    .concept-cursor-body,
+    .concept-agent-dock
+  )
+  button:hover {
+  background: #ffffff0d;
+}
+:is(
+    .concept-root,
+    .concept-agent-panel,
+    .concept-cursor-body,
+    .concept-agent-dock
+  )
+  :is(button, input, textarea):focus-visible {
+  outline: 2px solid #b3c7ef;
   outline-offset: 2px;
 }
-.concept-notch-trigger {
-  pointer-events: auto;
+:is(.concept-root, .concept-agent-panel, .concept-cursor-body) button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.concept-icon {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.65;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+.concept-notch {
   position: absolute;
-  left: 50%;
   top: 0;
+  left: 50%;
   transform: translateX(-50%);
   width: 200px;
-  height: 31px;
-  background: #000 !important;
-  border-radius: 0 0 15px 15px !important;
-  text-align: left;
-  padding: 4px 18px !important;
-  font-size: 15px !important;
-  box-shadow: 0 4px 10px #0004;
-}
-.concept-notch-trigger:after {
-  content: "✦";
-  float: right;
-  color: #afbbca;
-  font-size: 12px;
-}
-.concept-shelf {
-  pointer-events: auto;
-  position: absolute;
-  left: 50%;
-  top: 0;
-  transform: translateX(-50%);
-  width: min(680px, 80vw);
-  padding: 17px 17px 16px;
+  color: #c6c6cb;
   background: #030303;
-  border-radius: 0 0 24px 24px;
-  box-shadow: 0 12px 32px #0006;
+  border-radius: 0 0 16px 16px;
+  pointer-events: auto;
+  box-shadow: 0 8px 24px #0002;
 }
-.concept-shelf:before,
-.concept-shelf:after {
+/* Concave shoulders cut into the window edge. Each is a quarter-circle
+   cutout, not a rounded rectangle floating beneath a toolbar. */
+.concept-notch::before,
+.concept-notch::after {
   content: "";
   position: absolute;
   top: 0;
-  width: 30px;
-  height: 35px;
-  background: transparent;
+  width: 24px;
+  height: 24px;
   pointer-events: none;
 }
-.concept-shelf:before {
+.concept-notch::before {
   right: 100%;
-  border-radius: 0 30px 0 0;
-  box-shadow: 10px -10px 0 8px #030303;
+  background: radial-gradient(
+    circle at 0 100%,
+    transparent 23.5px,
+    #030303 24px
+  );
 }
-.concept-shelf:after {
+.concept-notch::after {
   left: 100%;
-  border-radius: 30px 0 0 0;
-  box-shadow: -10px -10px 0 8px #030303;
+  background: radial-gradient(
+    circle at 100% 100%,
+    transparent 23.5px,
+    #030303 24px
+  );
 }
-.concept-shelf[hidden],
-.concept-pin-card[hidden],
-.concept-agent-panel[hidden] {
+.concept-notch-trigger {
+  display: grid;
+  place-items: center;
+  height: 31px;
+  width: 100%;
+  border-radius: inherit !important;
+  padding: 0 !important;
+}
+.concept-notch-trigger:hover {
+  background: #121212 !important;
+}
+.concept-notch-handle {
+  width: 22px;
+  height: 2px;
+  border-radius: 2px;
+  background: #78787d;
+}
+.concept-root.open .concept-notch {
+  width: min(700px, calc(100vw - 64px));
+  border-radius: 0 0 24px 24px;
+  box-shadow: 0 16px 48px #0005;
+}
+.concept-root.open .concept-notch-trigger {
+  display: none;
+}
+.concept-shelf {
+  box-sizing: border-box;
+  padding: 13px 14px 13px;
+  min-height: 223px;
+}
+:is(
+  .concept-shelf,
+  .concept-pin-card,
+  .concept-agent-panel,
+  .concept-cursor-popover
+)[hidden] {
   display: none !important;
 }
 .concept-shelf-top {
   display: flex;
   align-items: center;
-  gap: 7px;
-  margin-bottom: 11px;
+  gap: 6px;
+  margin-bottom: 13px;
+  height: 29px;
+  padding-left: 6px;
+  color: #77777b;
+}
+.concept-shelf-top > .concept-icon {
+  width: 14px;
+  height: 14px;
 }
 .concept-shelf-top > button {
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  background: #252528;
-  color: #b9b9c4;
+  width: 29px;
+  height: 29px;
+  padding: 6px;
+  background: #242425;
+  color: #b6b6ba;
   border-radius: 50%;
+}
+.concept-shelf-top > button:hover {
+  background: #3a3a3d;
+  color: #fff;
 }
 .concept-pin-search {
   flex: 1;
   min-width: 0;
   background: transparent;
-  color: #ddd;
+  color: #dedee1;
   border: 0;
   font: 12px system-ui;
   padding: 5px;
+  border-radius: 4px;
+}
+.concept-pin-search::placeholder {
+  color: #85858a;
 }
 .concept-space-icons {
   display: flex;
   align-items: center;
   gap: 7px;
-  height: 39px;
-  margin-bottom: 16px;
+  min-height: 33px;
+  margin-bottom: 17px;
   overflow-x: auto;
+  scrollbar-width: thin;
 }
 .concept-space-icons button {
-  background: #222226;
-  color: #aaaab6;
-  height: 35px;
-  min-width: 39px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: #222224;
+  color: #a4a4aa;
+  height: 33px;
+  min-width: 38px;
+  border-radius: 18px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.concept-space-icons button:hover {
+  background: #38383c;
+  color: #fff;
 }
 .concept-space-icons button[aria-pressed="true"] {
-  background: #ededf1;
-  color: #161619;
+  background: #ededee;
+  color: #171719;
+}
+.concept-space-emoji {
+  font-size: 17px;
+  line-height: 1;
+}
+.concept-space-icons > .concept-icon {
+  width: 12px;
+  color: #68686e;
+}
+.concept-breadcrumbs {
+  gap: 2px;
+}
+.concept-breadcrumbs button {
+  background: transparent;
+  color: #c1c1c7;
+  font-size: 12px;
+  padding-inline: 7px;
+  border-radius: 6px;
+}
+.concept-breadcrumbs button:last-child {
+  color: #fff;
 }
 .concept-pin-cards {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 10px;
   overflow-x: auto;
-  min-height: 106px;
-  padding: 3px 0;
+  min-height: 104px;
+  padding: 3px 0 0;
+  scrollbar-width: thin;
 }
 .concept-pin-card {
   flex-shrink: 0;
-  width: 118px;
-  height: 108px;
-  background: #26262c !important;
-  border: 1px solid #3c3c44 !important;
-  padding: 10px !important;
+  box-sizing: border-box;
+  width: 124px;
+  height: 104px;
+  background: #222224 !important;
+  padding: 10px 11px !important;
   text-align: left;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  border-radius: 11px !important;
+  position: relative;
 }
 .concept-pin-card:hover {
-  background: #30303a !important;
-  border-color: #636473 !important;
+  background: #303033 !important;
 }
-.concept-site-icon,
-.concept-folder-icon {
+.concept-site-icon {
   display: grid;
   place-items: center;
-  height: 58px;
+  height: 64px;
   width: 100%;
-  font-size: 50px;
-  color: #91aee4;
 }
 .concept-site-icon img {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
-}
-.concept-folder-icon {
-  text-shadow: 0 -5px #6d85b5;
 }
 .concept-pin-label {
   display: block;
-  max-width: 96px;
+  width: 100%;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
   font-size: 11px;
+  line-height: 16px;
+  color: #cdcdd1;
+}
+.concept-folder-card {
+  background: transparent !important;
+  isolation: isolate;
+}
+.concept-folder-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: #303035;
+  clip-path: polygon(0 0, 32% 0, 40% 9%, 100% 9%, 100% 100%, 0 100%);
+  border-radius: 10px;
+}
+.concept-folder-card:hover {
+  background: transparent !important;
+}
+.concept-folder-card:hover::before {
+  background: #3c3c43;
+}
+.concept-folder-icon {
+  width: 45px;
+  height: 45px;
+  display: grid;
+  grid-template-columns: repeat(2, 18px);
+  grid-template-rows: repeat(2, 18px);
+  gap: 6px;
+  align-self: center;
+  margin-top: 9px;
+  color: #a9b8d0;
+}
+.concept-folder-icon:has(> :only-child) {
+  display: grid;
+  place-items: center;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+.concept-folder-icon img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+.concept-folder-icon > .concept-icon:only-child {
+  width: 30px;
+  height: 30px;
+  opacity: 0.6;
+  stroke-width: 1.2;
 }
 .concept-empty {
-  padding: 15px;
-  color: #898995;
+  align-self: center;
+  margin: 0 auto;
+  color: #85858b;
   font-size: 12px;
 }
 .concept-address {
   pointer-events: auto;
   position: absolute;
-  top: 5px;
-  right: calc(50% + 115px);
-  max-width: 200px;
-  background: #22232be8 !important;
-  color: #b6b9c6 !important;
-  font-size: 10px !important;
-  padding: 5px 10px !important;
+  top: 3px;
+  right: calc(50% + 129px);
+  max-width: min(220px, calc(50vw - 375px));
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #a0a0a7 !important;
+  font-size: 11px !important;
+  padding: 5px 7px !important;
+  height: 25px;
+}
+.concept-address > .concept-icon {
+  width: 13px;
+  height: 13px;
+}
+.concept-address-label {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -234,97 +417,112 @@
 .concept-root.open .concept-address {
   visibility: hidden;
 }
-.concept-navigation {
-  display: flex;
-  gap: 2px;
-  align-items: center;
-}
-.concept-navigation button {
-  font-size: 20px;
-  color: #c1c5d0;
-  padding: 2px 8px;
-}
 .concept-agent-dock {
   display: flex;
+  flex-wrap: wrap;
   gap: 5px;
   align-items: center;
-  min-height: 48px;
-  padding: 4px 12px;
-  margin-top: auto;
-  color: #a6adbf;
-}
-.concept-dock-title {
-  font: 11px system-ui;
-  margin-right: auto;
-}
-.concept-saved-agent {
-  color: #bfa3e6 !important;
-  font-size: 20px !important;
-  padding: 4px !important;
-}
-#concept-cursor-panel {
-  --panel-background: #24252def;
-  --panel-color: #f0f0f6;
-  --panel-border-color: #535764;
-  --panel-border-radius: 13px;
-}
-.concept-cursor-body {
-  padding: 8px;
+  min-height: 55px;
+  padding: 8px 7px 2px;
+  margin: auto 8px 0;
+  border-top: 1px solid #ffffff12;
+  color: #a6a6ad;
   font: 12px system-ui;
-  color: #f0f0f6;
 }
-.concept-cursor-body.selection {
-  display: flex;
-  gap: 3px;
-  padding: 5px;
-}
-.concept-cursor-body button:hover {
-  background: #424553;
-}
-.concept-quick-prompt {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 310px;
-}
-.concept-quick-prompt input {
-  background: none;
-  border: 0;
-  color: #f0f0f5;
-  flex: 1;
-  min-width: 0;
-  font: 13px system-ui;
+.concept-agent-dock > button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 9px;
 }
 .concept-task-light {
   display: block;
-  width: 28px;
-  height: 28px;
+  position: relative;
+  width: 30px;
+  height: 27px;
   flex-shrink: 0;
+  --agent-light: #9ac0ff;
+}
+.concept-task-light::before {
+  content: "";
+  position: absolute;
+  inset: 8px 0 7px;
+  background: var(--agent-light);
+  opacity: 0.65;
+  filter: blur(7px);
+  transform: rotate(-17deg);
   border-radius: 50%;
-  background: radial-gradient(
-    ellipse,
-    #edf5ff 0%,
-    #7daaff 25%,
-    #6791f080 48%,
-    transparent 72%
-  );
-  filter: blur(3px);
+}
+.concept-task-light::after {
+  content: "";
+  position: absolute;
+  inset: 12px 7px 11px;
+  background: color-mix(in srgb, var(--agent-light) 60%, white);
+  border-radius: 50%;
+  filter: blur(1.5px);
+  transform: rotate(-17deg);
+}
+.concept-hyper-body {
+  display: block;
+  width: 26px;
+  height: 25px;
+  flex-shrink: 0;
+  border-radius: 40% 58% 43% 55% / 54% 39% 62% 45%;
+  background: color-mix(in srgb, var(--agent-light, #c7a4ef) 65%, #42424a);
+  box-shadow:
+    inset 1px 2px 3px #ffffff18,
+    inset -2px -3px 5px #0004;
+}
+.concept-agent-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 9px);
+  left: 0;
+  background: #29292d;
+  border: 1px solid #ffffff15;
+  padding: 10px 12px;
+  border-radius: 9px;
+  box-shadow: 0 6px 20px #0004;
+  width: max-content;
+  max-width: 220px;
+  text-align: left;
+  z-index: 10030;
+  pointer-events: none;
+}
+.concept-agent-tooltip strong {
+  display: block;
+  font-size: 12px;
+  color: #dedee2;
+  font-weight: 500;
+  margin-bottom: 4px;
+  overflow-wrap: anywhere;
+}
+.concept-agent-tooltip > span {
+  display: block;
+  font-size: 11px;
+  color: #9999a2;
+}
+.concept-saved-agent:is(:hover, :focus-visible) .concept-agent-tooltip {
+  display: block;
 }
 .concept-agent-panel {
   position: fixed;
   z-index: 9999;
   right: 8px;
-  top: 10px;
+  top: 8px;
   bottom: 8px;
-  width: 340px;
+  width: min(348px, calc(100vw - 24px));
   box-sizing: border-box;
-  background: #202127;
-  border: 1px solid #3b3e49;
-  border-radius: 14px;
-  padding: 15px;
-  color: #e0e3ed;
+  background: #202023;
+  border: 1px solid #ffffff12;
+  border-radius: 12px;
+  padding: 17px;
+  color: #dedee3;
   font: 13px system-ui;
-  box-shadow: -15px 0 40px #0003;
+  box-shadow: -15px 0 40px #0004;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -332,50 +530,147 @@
 .concept-agent-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
+  min-height: 35px;
+}
+.concept-agent-header strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.concept-agent-status {
+  color: #93939c;
+  font-size: 11px;
 }
 .concept-agent-header button {
   margin-left: auto;
+  padding: 5px;
+  display: grid;
+  place-items: center;
 }
 .concept-agent-source {
-  font-size: 11px;
-  color: #939eb4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 12px 0;
+  border-block: 1px solid #ffffff10;
+  color: #b2b2bc;
+}
+.concept-agent-source img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+.concept-agent-source span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .concept-agent-panel blockquote {
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.65;
   margin: 0;
-  border-left: 2px solid #6982b8;
-  padding-left: 12px;
-  max-height: 220px;
+  border-left: 2px solid #828da9;
+  padding: 3px 0 3px 12px;
+  max-height: 28vh;
   overflow: auto;
   white-space: pre-wrap;
+  color: #bcbcc7;
+}
+.concept-input-label {
+  font-size: 11px;
+  color: #9999a3;
+  margin-bottom: -7px;
 }
 .concept-agent-input {
-  min-height: 100px;
-  border: 1px solid #454957;
-  border-radius: 10px;
-  padding: 10px;
-  background: #282a33;
-  color: #f0f0f6;
-  font: 13px system-ui;
+  min-height: 135px;
+  max-height: 40vh;
+  box-sizing: border-box;
+  border: 1px solid #ffffff17;
+  border-radius: 9px;
+  padding: 11px;
+  background: #262629;
+  color: #ececf1;
+  font: 13px/1.6 system-ui;
   resize: vertical;
+}
+.concept-agent-input::placeholder {
+  color: #93939d;
+}
+.concept-agent-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 .concept-persistent {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 12px;
+  font-size: 11px;
+  color: #b4b4bd;
+}
+.concept-persistent input {
+  accent-color: #b6c7e4;
 }
 .concept-primary {
-  background: #bacbf1 !important;
-  color: #1a2232 !important;
+  background: #dedee7 !important;
+  color: #202025 !important;
+  font-size: 12px !important;
+}
+.concept-primary:hover {
+  background: white !important;
 }
 .concept-agent-connection {
   font-size: 12px;
-  color: #a3acbe;
-  line-height: 1.6;
+  color: #9696a1;
+  line-height: 1.65;
+  margin: 0;
 }
+.concept-cursor-popover {
+  position: fixed;
+  z-index: 10020;
+  border: 1px solid #ffffff20;
+  border-radius: 11px;
+  background: #26262a;
+  color: #e4e4ea;
+  box-shadow: 0 6px 25px #0005;
+}
+.concept-cursor-body {
+  padding: 7px;
+  font: 12px system-ui;
+  color: #e4e4ea;
+}
+.concept-cursor-body.selection {
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+}
+.concept-quick-prompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(300px, calc(100vw - 50px));
+}
+.concept-quick-prompt input {
+  background: none;
+  border: 0;
+  color: #eeeef3;
+  flex: 1;
+  min-width: 0;
+  font: 13px system-ui;
+  padding: 6px 0;
+}
+.concept-quick-prompt input::placeholder {
+  color: #a0a0ac;
+}
+.concept-quick-prompt button {
+  padding: 6px;
+  display: grid;
+  place-items: center;
+  background: #ffffff0c;
+}
+/* Activity is driven only by the ownership-gated execution hook. */
 .tabbrowser-tab[concept-agent-working] {
   position: relative;
   isolation: isolate;
@@ -383,24 +678,32 @@
 .tabbrowser-tab[concept-agent-working] .tab-background {
   background: color-mix(
     in srgb,
-    var(--concept-agent-color) 27%,
-    #252736
+    var(--concept-agent-color) 29%,
+    #25252b
   ) !important;
   box-shadow:
-    0 0 19px 3px color-mix(in srgb, var(--concept-agent-color) 55%, transparent),
-    inset 0 0 15px
+    0 0 22px 5px color-mix(in srgb, var(--concept-agent-color) 55%, transparent),
+    inset 0 0 18px
       color-mix(in srgb, var(--concept-agent-color) 25%, transparent) !important;
   outline: 1px solid
-    color-mix(in srgb, var(--concept-agent-color) 62%, transparent) !important;
+    color-mix(in srgb, var(--concept-agent-color) 65%, transparent) !important;
 }
 @media (prefers-reduced-motion: no-preference) {
-  .concept-root.open .concept-shelf {
-    animation: concept-open 180ms ease-out;
+  .concept-notch {
+    transition:
+      width 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-radius 220ms;
   }
-  @keyframes concept-open {
+  .concept-root.open .concept-shelf {
+    animation: concept-reveal 180ms ease-out;
+  }
+  .concept-pin-card {
+    transition: background 120ms ease;
+  }
+  @keyframes concept-reveal {
     from {
       opacity: 0;
-      translate: 0 -8px;
+      translate: 0 -6px;
     }
     to {
       opacity: 1;
@@ -408,23 +711,88 @@
     }
   }
 }
-
-.concept-cursor-popover {
-  position: fixed;
-  z-index: 10020;
-  border: 1px solid #535764;
-  border-radius: 12px;
-  background: #24252d;
-  color: #f0f0f6;
-  box-shadow: 0 6px 25px #0006;
+@media (max-width: 900px) {
+  .concept-address {
+    max-width: 140px;
+    right: auto;
+    left: 245px;
+  }
 }
-.concept-cursor-popover[hidden] {
+:root[inDOMFullscreen]
+  :is(.concept-root, .concept-agent-panel, .concept-cursor-popover) {
   display: none !important;
 }
-
+:root[browser-concept] .zen-workspace-close-unpinned-tabs-button {
+  display: none !important;
+}
+:root[browser-concept] #tabs-newtab-button {
+  opacity: 0.8;
+}
+:root[browser-concept] .tabbrowser-tab[selected] .tab-background {
+  background: #ffffff12 !important;
+}
+:root[browser-concept]
+  .tabbrowser-tab[concept-agent-working][selected]
+  .tab-background {
+  background: color-mix(
+    in srgb,
+    var(--concept-agent-color) 29%,
+    #25252b
+  ) !important;
+}
+:root[browser-concept] #zen-sidebar-foot-buttons {
+  border-top: 1px solid #ffffff12 !important;
+  margin-inline: 9px !important;
+  padding-block: 6px !important;
+  min-height: 54px !important;
+  gap: 0 !important;
+}
+#zen-sidebar-foot-buttons > .concept-agent-dock {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  min-height: 40px;
+  flex: 1;
+}
+@media (max-width: 900px) {
+  .concept-address {
+    max-width: calc(50vw - 370px);
+  }
+}
+@media (max-width: 760px) {
+  .concept-address {
+    display: none;
+  }
+}
+/* Input focus stays visible without a second rounded box inside the prompt. */
+.concept-pin-search:focus-visible {
+  outline: 0 !important;
+  box-shadow: 0 1px #b3c7ef;
+  border-radius: 0;
+}
+.concept-quick-prompt input:focus-visible {
+  outline: 0 !important;
+}
+.concept-cursor-popover:focus-within {
+  border-color: #8b99b4;
+}
 .concept-site-icon img {
-  background: #e6e8ef;
-  border-radius: 8px;
   padding: 5px;
+  border-radius: 8px;
+  background: #dedee3;
   box-sizing: content-box;
+}
+.concept-folder-icon img {
+  padding: 2px;
+  border-radius: 4px;
+  background: #dedee3;
+  box-sizing: border-box;
+}
+@media (min-width: 901px) {
+  :root[browser-concept][concept-agent-open] #tabbrowser-tabbox {
+    margin-inline-end: 356px !important;
+  }
+}
+:root[inDOMFullscreen][concept-agent-open] #tabbrowser-tabbox {
+  margin-inline-end: 0 !important;
 }

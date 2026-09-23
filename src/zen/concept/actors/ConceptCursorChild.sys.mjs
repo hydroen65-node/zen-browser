@@ -36,8 +36,10 @@ export class ConceptCursorChild extends JSWindowActorChild {
       this.contentWindow.clearTimeout(this.timer);
       this.timer = this.contentWindow.setTimeout(() => {
         const selection = this.contentWindow.getSelection();
-        if (!selection || selection.isCollapsed || !selection.rangeCount)
+        if (!selection || selection.isCollapsed || !selection.rangeCount) {
+          this.sendAsyncMessage("ConceptCursor:DismissSelection");
           return;
+        }
         const rect = selection.getRangeAt(0).getBoundingClientRect();
         this.send(
           "selection",

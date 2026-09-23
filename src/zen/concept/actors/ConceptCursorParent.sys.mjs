@@ -3,8 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 export class ConceptCursorParent extends JSWindowActorParent {
   receiveMessage({ name, data }) {
-    if (name !== "ConceptCursor:Prompt" || !data || typeof data !== "object")
-      return;
     const win = this.browsingContext.topChromeWindow;
     const browser = win?.gBrowser?.selectedBrowser;
     if (
@@ -12,6 +10,12 @@ export class ConceptCursorParent extends JSWindowActorParent {
       browser.browsingContext.id !== this.browsingContext.top.id ||
       Services.focus.activeWindow !== win
     )
+      return;
+    if (name === "ConceptCursor:DismissSelection") {
+      win.gBrowserConcept?.hideCursorSelection();
+      return;
+    }
+    if (name !== "ConceptCursor:Prompt" || !data || typeof data !== "object")
       return;
     if (
       !["shake", "selection"].includes(data.kind) ||
