@@ -3,24 +3,27 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 :root[browser-concept] {
   color-scheme: dark;
-  --zen-primary-color: #aaaab2;
-  --zen-main-browser-background: #171719 !important;
-  --zen-main-browser-background-toolbar: #171719 !important;
-  --zen-main-browser-background-old: #171719 !important;
-  --zen-main-browser-background-toolbar-old: #171719 !important;
-  --zen-themed-toolbar-bg-transparent: #171719 !important;
-  --zen-themed-toolbar-bg: #171719;
-  --toolbar-bgcolor: #171719;
+  --concept-frame: color-mix(in srgb, #14171a 84%, var(--zen-primary-color));
+  --zen-main-browser-background: var(--concept-frame) !important;
+  --zen-main-browser-background-toolbar: var(--concept-frame) !important;
+  --zen-main-browser-background-old: var(--concept-frame) !important;
+  --zen-main-browser-background-toolbar-old: var(--concept-frame) !important;
+  --zen-themed-toolbar-bg-transparent: var(--concept-frame) !important;
+  --zen-themed-toolbar-bg: var(--concept-frame);
+  --toolbar-bgcolor: var(--concept-frame);
   --toolbar-color: #c7c7cb;
   --lwt-text-color: #c7c7cb;
-  --lwt-accent-color: #171719;
-  --sidebar-background-color: #171719;
+  --lwt-accent-color: var(--concept-frame);
+  --sidebar-background-color: var(--concept-frame);
   --sidebar-text-color: #c7c7cb;
   --concept-ink: #e7e7e9;
   --concept-muted: #99999f;
 }
 :root[browser-concept] #navigator-toolbox {
-  background: #171719 !important;
+  background: var(--concept-frame) !important;
+}
+:root[browser-concept]:not([inDOMFullscreen="true"]) #zen-tabbox-wrapper {
+  margin-top: 40px !important;
 }
 /* Retain the native omnibox and its commands, but remove its resting row.
    Zero size (not display:none) lets Cmd+L and the site title focus it. */
@@ -42,9 +45,32 @@
   margin-block: 0 !important;
   --urlbar-container-height: 0px !important;
 }
+:root[browser-concept]
+  #urlbar-container:has(#urlbar[zen-floating-urlbar="true"]) {
+  min-height: 0 !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
 :root[browser-concept] #urlbar:not([focused]):not([open]) {
   opacity: 0;
   pointer-events: none;
+}
+:root[browser-concept] #urlbar[open][zen-floating-urlbar="true"] {
+  min-width: 0 !important;
+  width: min(640px, calc(100vw - 36px)) !important;
+  font-size: 1.05em !important;
+  --urlbar-container-height: 52px !important;
+  --urlbarView-results-padding: 6px !important;
+}
+:root[browser-concept]
+  #urlbar[open][zen-floating-urlbar="true"]
+  .urlbarView-row {
+  --urlbarview-row-padding-block: 6px;
 }
 :root[browser-concept] #zen-appcontent-navbar-container {
   min-height: 0 !important;
@@ -66,6 +92,10 @@
 }
 :root[browser-concept] #tabs-newtab-button:hover {
   opacity: 1;
+}
+:root[browser-concept]:has(#urlbar[open][zen-floating-urlbar="true"])
+  #tabs-newtab-button:not(:focus-visible) {
+  background: transparent !important;
 }
 .concept-root {
   position: fixed;
@@ -132,13 +162,13 @@
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 200px;
-  height: 31px;
+  width: 216px;
+  height: 38px;
   color: #c6c6cb;
   background: #030303;
-  border-radius: 0 0 16px 16px;
+  border-radius: 0 0 18px 18px;
   pointer-events: auto;
-  box-shadow: 0 8px 24px #0002;
+  box-shadow: 0 9px 24px #0004;
 }
 /* Concave shoulders cut into the window edge. Each is a quarter-circle
    cutout, not a rounded rectangle floating beneath a toolbar. */
@@ -147,24 +177,24 @@
   content: "";
   position: absolute;
   top: 0;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   pointer-events: none;
 }
 .concept-notch::before {
   right: 100%;
   background: radial-gradient(
     circle at 0 100%,
-    transparent 23.5px,
-    #030303 24px
+    transparent 27.5px,
+    #030303 28px
   );
 }
 .concept-notch::after {
   left: 100%;
   background: radial-gradient(
     circle at 100% 100%,
-    transparent 23.5px,
-    #030303 24px
+    transparent 27.5px,
+    #030303 28px
   );
 }
 .concept-notch-trigger {
@@ -172,9 +202,9 @@
   place-items: center;
   position: absolute;
   top: 0;
-  left: -36px;
+  left: -32px;
   height: 48px;
-  width: calc(100% + 72px);
+  width: calc(100% + 64px);
   border-radius: 0 !important;
   padding: 0 !important;
 }
@@ -185,14 +215,14 @@
   background: #c5c5ca;
 }
 .concept-notch-handle {
-  width: 22px;
-  height: 2px;
+  width: 18px;
+  height: 1px;
   border-radius: 2px;
-  background: #78787d;
-  transform: translateY(-8px);
+  background: #6e6e72;
+  transform: translateY(-5px);
 }
 .concept-root.open .concept-notch {
-  width: min(700px, calc(100vw - 64px));
+  width: min(var(--concept-shelf-width, 700px), calc(100vw - 64px));
   height: auto;
   border-radius: 0 0 24px 24px;
   box-shadow: 0 16px 48px #0005;
@@ -408,31 +438,68 @@
   color: #85858b;
   font-size: 12px;
 }
-.concept-address {
+.concept-site-badge {
   pointer-events: auto;
   position: absolute;
-  top: 3px;
-  right: calc(50% + 129px);
-  max-width: min(220px, calc(50vw - 375px));
+  top: 4px;
+  left: calc(50% - 148px);
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0 !important;
+  color: #b9bec4 !important;
+  background: #ffffff0d !important;
+  border: 1px solid #ffffff0d !important;
+  border-radius: 9px !important;
+  box-shadow: 0 1px 3px #0003;
+}
+.concept-site-badge:hover {
+  background: #ffffff1b !important;
+  border-color: #ffffff20 !important;
+}
+.concept-site-badge img {
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+}
+.concept-site-badge > .concept-icon {
+  width: 16px;
+  height: 16px;
+}
+.concept-address {
+  pointer-events: none;
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  transform: translate(-50%, -4px);
+  opacity: 0;
+  max-width: min(240px, calc(100vw - 32px));
+  min-height: 27px;
   display: flex;
   align-items: center;
-  gap: 7px;
-  color: #a0a0a7 !important;
+  color: #dadde0 !important;
+  background: #0c0d0ff0 !important;
+  border: 1px solid #ffffff1b !important;
+  box-shadow: 0 5px 18px #0005;
   font-size: 11px !important;
-  padding: 5px 7px !important;
-  height: 25px;
+  padding: 4px 11px !important;
+  border-radius: 11px !important;
 }
-.concept-address > .concept-icon {
-  width: 13px;
-  height: 13px;
+.concept-root.concept-title-visible .concept-address,
+.concept-root:not(.open):has(.concept-site-badge:hover) .concept-address,
+.concept-root:not(.open):has(.concept-notch:hover) .concept-address {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
 }
 .concept-address-label {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.concept-root.open .concept-address {
-  visibility: hidden;
+.concept-root.open :is(.concept-address, .concept-site-badge) {
+  display: none;
 }
 .concept-agent-dock {
   display: flex;
@@ -531,68 +598,118 @@
 .concept-agent-panel {
   position: fixed;
   z-index: 9999;
-  right: 8px;
-  top: 8px;
-  bottom: 8px;
-  width: min(348px, calc(100vw - 24px));
+  right: 22px;
+  top: 70px;
+  width: min(390px, calc(100vw - 24px));
+  height: min(470px, calc(100vh - 88px));
   box-sizing: border-box;
-  background: #202023;
-  border: 1px solid #ffffff12;
-  border-radius: 12px;
-  padding: 17px;
+  background: color-mix(in srgb, var(--concept-frame) 54%, #252930);
+  border: 1px solid #ffffff24;
+  border-radius: 20px;
+  padding: 16px;
   color: #dedee3;
   font: 13px system-ui;
-  box-shadow: -15px 0 40px #0004;
+  box-shadow:
+    0 18px 56px #0008,
+    0 2px 10px #0005,
+    inset 0 1px #ffffff12;
+  backdrop-filter: blur(18px);
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 12px;
+  overflow: hidden;
+}
+.concept-agent-panel[concept-docked] {
+  left: auto !important;
+  right: 8px !important;
+  top: 48px !important;
+  bottom: 8px;
+  width: 348px;
+  height: calc(100vh - 56px);
+  border-radius: 14px;
+  box-shadow: -6px 0 26px #0005;
 }
 .concept-agent-header {
   display: flex;
   align-items: center;
   gap: 9px;
-  min-height: 35px;
+  min-height: 36px;
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+}
+.concept-agent-panel[concept-docked] .concept-agent-header {
+  cursor: default;
+}
+.concept-agent-panel[concept-dragging] .concept-agent-header {
+  cursor: grabbing;
 }
 .concept-agent-header strong {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
+  max-width: 158px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .concept-agent-status {
   color: #93939c;
   font-size: 11px;
 }
 .concept-agent-header button {
-  margin-left: auto;
-  padding: 5px;
+  padding: 6px;
   display: grid;
   place-items: center;
+  color: #bac0c9;
+}
+.concept-agent-header button:first-of-type {
+  margin-left: auto;
 }
 .concept-agent-source {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  padding: 12px 0;
-  border-block: 1px solid #ffffff10;
+  padding: 9px 0;
+  border-block: 1px solid #ffffff19;
   color: #b2b2bc;
 }
 .concept-agent-source img {
   width: 16px;
   height: 16px;
   object-fit: contain;
+  box-sizing: border-box;
+  padding: 2px;
+  border-radius: 4px;
+  background: #e8e8eb;
 }
 .concept-agent-source span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.concept-agent-panel blockquote {
+.concept-agent-selection {
+  min-height: 0;
+  color: #bcbcc7;
+  border-left: 2px solid #828da9;
+  padding-left: 11px;
+  font-size: 12px;
+}
+.concept-agent-selection summary {
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.55;
+}
+.concept-agent-selection summary::marker {
+  color: #929bad;
+}
+.concept-agent-selection blockquote {
   font-size: 12px;
   line-height: 1.65;
-  margin: 0;
-  border-left: 2px solid #828da9;
-  padding: 3px 0 3px 12px;
-  max-height: 28vh;
+  margin: 8px 0 0;
+  max-height: 20vh;
   overflow: auto;
   white-space: pre-wrap;
   color: #bcbcc7;
@@ -603,13 +720,13 @@
   margin-bottom: -7px;
 }
 .concept-agent-input {
-  min-height: 135px;
-  max-height: 40vh;
+  min-height: 88px;
+  max-height: 25vh;
   box-sizing: border-box;
   border: 1px solid #ffffff17;
   border-radius: 9px;
   padding: 11px;
-  background: #262629;
+  background: #ffffff0a;
   color: #ececf1;
   font: 13px/1.6 system-ui;
   resize: vertical;
@@ -642,17 +759,16 @@
   background: white !important;
 }
 .concept-agent-connection {
-  font-size: 12px;
-  color: #9696a1;
-  line-height: 1.65;
+  font-size: 11px;
+  color: #a8adb6;
+  line-height: 1.45;
   margin: 0;
 }
 .concept-tool-area {
-  min-height: 70px;
+  min-height: 60px;
   flex: 1;
   overflow: auto;
-  border-top: 1px solid #ffffff10;
-  padding-top: 13px;
+  padding-top: 2px;
 }
 .concept-tool-heading {
   display: flex;
@@ -778,17 +894,15 @@
   isolation: isolate;
 }
 .tabbrowser-tab[concept-agent-working] .tab-background {
-  background: color-mix(
+  background-color: color-mix(
     in srgb,
-    var(--concept-agent-color) 29%,
-    #25252b
+    var(--concept-agent-color) 27%,
+    var(--concept-frame)
   ) !important;
   box-shadow:
     0 0 22px 5px color-mix(in srgb, var(--concept-agent-color) 55%, transparent),
     inset 0 0 18px
       color-mix(in srgb, var(--concept-agent-color) 25%, transparent) !important;
-  outline: 1px solid
-    color-mix(in srgb, var(--concept-agent-color) 65%, transparent) !important;
 }
 @media (prefers-reduced-motion: no-preference) {
   .concept-notch {
@@ -802,6 +916,18 @@
   .concept-pin-card {
     transition: background 120ms ease;
   }
+  .concept-agent-panel:not([concept-dragging]) {
+    transition:
+      top 250ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      right 250ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      width 250ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      height 250ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-radius 250ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 250ms ease;
+  }
+  :root[browser-concept] #tabbrowser-tabbox {
+    transition: margin-inline-end 250ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
   @keyframes concept-reveal {
     from {
       opacity: 0;
@@ -811,13 +937,6 @@
       opacity: 1;
       translate: 0 0;
     }
-  }
-}
-@media (max-width: 900px) {
-  .concept-address {
-    max-width: 140px;
-    right: auto;
-    left: 245px;
   }
 }
 :root[inDOMFullscreen]
@@ -831,15 +950,42 @@
   opacity: 0.8;
 }
 :root[browser-concept] .tabbrowser-tab[selected] .tab-background {
-  background: #ffffff12 !important;
+  background-color: color-mix(
+    in srgb,
+    var(--zen-primary-color) 12%,
+    var(--concept-frame)
+  ) !important;
+}
+:root[browser-concept][zen-sidebar-expanded="true"]
+  #tabbrowser-tabs
+  .tabbrowser-tab[concept-trail-depth]:not([pinned]):not([zen-essential]):not(
+    [zen-glance-tab]
+  ) {
+  margin-inline-start: calc(
+    var(--zen-folder-indent, 0px) + var(--concept-trail-indent, 0px)
+  ) !important;
+}
+:root[browser-concept][zen-sidebar-expanded="true"]
+  #tabbrowser-tabs
+  .tabbrowser-tab[concept-trail-depth]:not([pinned]):not([zen-essential]):not(
+    [zen-glance-tab]
+  )::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: -8px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: #ffffff38;
+  pointer-events: none;
 }
 :root[browser-concept]
   .tabbrowser-tab[concept-agent-working][selected]
   .tab-background {
-  background: color-mix(
+  background-color: color-mix(
     in srgb,
-    var(--concept-agent-color) 29%,
-    #25252b
+    var(--concept-agent-color) 27%,
+    var(--concept-frame)
   ) !important;
 }
 :root[browser-concept] #zen-sidebar-foot-buttons {
@@ -856,15 +1002,7 @@
   min-height: 40px;
   flex: 1;
 }
-@media (max-width: 900px) {
-  .concept-address {
-    max-width: calc(50vw - 370px);
-  }
-}
 @media (max-width: 760px) {
-  .concept-address {
-    display: none;
-  }
   .concept-agent-panel {
     left: max(
       calc(
@@ -873,12 +1011,13 @@
       236px
     );
     right: 8px;
-    width: auto;
+    width: min(390px, calc(100vw - 250px));
   }
 }
 @media (max-width: 540px) {
   .concept-agent-panel {
     left: 8px;
+    width: auto;
   }
 }
 /* Input focus stays visible without a second rounded box inside the prompt. */
@@ -906,10 +1045,10 @@
   box-sizing: border-box;
 }
 @media (min-width: 901px) {
-  :root[browser-concept][concept-agent-open] #tabbrowser-tabbox {
+  :root[browser-concept][concept-agent-docked] #tabbrowser-tabbox {
     margin-inline-end: 356px !important;
   }
 }
-:root[inDOMFullscreen][concept-agent-open] #tabbrowser-tabbox {
+:root[inDOMFullscreen][concept-agent-docked] #tabbrowser-tabbox {
   margin-inline-end: 0 !important;
 }

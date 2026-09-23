@@ -3,15 +3,18 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import {
   safeWebURL,
+  trailDepth,
   AgentOwnership,
   AgentToolGate,
 } from "resource:///modules/zen/concept/ConceptModel.sys.mjs";
 
 import { ConceptStore } from "resource:///modules/zen/concept/ConceptStore.sys.mjs";
+import { SessionStore } from "moz-src:///browser/components/sessionstore/SessionStore.sys.mjs";
 import {
   AgentRun,
   localPageInspection,
 } from "resource:///modules/zen/concept/AgentRun.sys.mjs";
+import { ConceptTaskState } from "resource:///modules/zen/concept/ConceptTaskState.sys.mjs";
 
 const HTML = "http://www.w3.org/1999/xhtml";
 class BrowserConcept {
@@ -23,6 +26,7 @@ class BrowserConcept {
     this.ownership = new AgentOwnership();
     this.runningTools = new Map();
     this.toolHistory = new Map();
+    this.taskState = new ConceptTaskState();
     this.toolGate = new AgentToolGate(this.ownership, (tool, tab) =>
       this.performBrowserTool(tool, tab),
     );
@@ -48,6 +52,7 @@ class BrowserConcept {
       search: "M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0",
       plus: "M12 5v14M5 12h14",
       close: "m6 6 12 12M6 18 18 6",
+      dock: "M3 4h18v16H3zM15 4v16",
       folder:
         "M3 7V5a1 1 0 0 1 1-1h6l3 3h7a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7Z",
       star: "m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9L7.5 14 3 9.6l6.2-.9Z",
@@ -56,6 +61,8 @@ class BrowserConcept {
       briefcase: "M8 7V4h8v3M3 7h18v13H3ZM3 12h18M10 12v3h4v-3",
       leaf: "M5 19C0 8 11 3 21 3c0 10-5 21-16 16Zm0 0L16 8",
       grid: "M3 3h7v7H3Zm11 0h7v7h-7ZM3 14h7v7H3Zm11 0h7v7h-7Z",
+      globe:
+        "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM2 12h20M12 2c3 3 4 6 4 10s-1 7-4 10c-3-3-4-6-4-10s1-7 4-10Z",
     };
     const svg = this.doc.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("viewBox", "0 0 24 24");
@@ -147,6 +154,12 @@ class BrowserConcept {
     this.shelf.id = "concept-shelf";
     this.shelf.hidden = true;
     this.shelf.setAttribute("aria-label", "Spaces and pinned items");
+    this.siteBadge = this.button(
+      "",
+      "Open notch",
+      () => this.toggle(true),
+      "concept-site-badge",
+    );
     this.address = this.button(
       "",
       "Search or edit address",
@@ -157,7 +170,7 @@ class BrowserConcept {
       "concept-address",
     );
     this.notch.append(this.trigger, this.shelf);
-    this.root.append(this.notch, this.address);
+    this.root.append(this.notch, this.siteBadge, this.address);
     this.doc.documentElement.append(this.root);
     this.panel = this.node("div", "concept-cursor-popover");
     this.panel.hidden = true;
@@ -180,7 +193,22 @@ class BrowserConcept {
       this.onEvent,
     );
     this.win.gBrowser.tabContainer.addEventListener("TabClose", this.onEvent);
+    this.win.gBrowser.tabContainer.addEventListener("TabOpen", this.onEvent);
+    this.win.gBrowser.tabContainer.addEventListener("TabMove", this.onEvent);
+    this.win.gBrowser.tabContainer.addEventListener(
+      "SSTabRestored",
+      this.onEvent,
+    );
     this.win.addEventListener("ZenWorkspacesUIUpdate", this.onEvent);
+    this.win.addEventListener("SSWindowRestored", this.onEvent);
+    this.trailSpaceObserver = new MutationObserver(() =>
+      this.scheduleTrailRender(),
+    );
+    this.trailSpaceObserver.observe(this.win.gBrowser.tabContainer, {
+      attributes: true,
+      subtree: true,
+      attributeFilter: ["zen-workspace-id"],
+    });
     this.doc.addEventListener("keydown", this.onEvent, true);
     this.doc.addEventListener("pointerdown", this.onEvent, true);
     this.win.addEventListener("unload", () => this.destroy(), { once: true });
@@ -212,6 +240,8 @@ class BrowserConcept {
     this.storeListener = () => this.render();
     if (!this.private) ConceptStore.listeners.add(this.storeListener);
     this.render();
+    this.scheduleTrailRender();
+    this.showSiteTitle();
     if (this.storeError)
       this.notice("Saved items could not be read. Your file has been kept.");
     console.info("Browser concept initialized");
@@ -237,6 +267,17 @@ class BrowserConcept {
         if (operation.tab === event.target) operation.controller.abort();
       }
       this.ownership.close(event.target);
+      if (!event.detail?.adoptedBy) this.closeTrailParent(event.target);
+      else this.scheduleTrailRender();
+      return;
+    }
+    if (
+      event.type === "TabOpen" ||
+      event.type === "TabMove" ||
+      event.type === "SSTabRestored" ||
+      event.type === "SSWindowRestored"
+    ) {
+      this.scheduleTrailRender(event.type === "SSWindowRestored");
       return;
     }
     if (
@@ -266,6 +307,9 @@ class BrowserConcept {
       this.panel.hidePopup();
       if (event.type === "ZenWorkspacesUIUpdate") this.path = [];
       this.render();
+      if (event.type === "TabSelect") this.scheduleTrailRender();
+      if (event.type === "ZenWorkspacesUIUpdate") this.scheduleTrailRender();
+      if (event.type === "TabSelect") this.showSiteTitle();
       return;
     }
     if (event.type === "keydown" && event.key === "Escape") {
@@ -313,10 +357,76 @@ class BrowserConcept {
     this.agentPanel.hidden = true;
     this.agentPanel.setAttribute("aria-label", "Agent context");
     this.doc.documentElement.append(this.agentPanel);
+    this.onAgentResize = () => this.clampAgentPanel();
+    this.win.addEventListener("resize", this.onAgentResize);
   }
   closeAgentPanel() {
     this.agentPanel.hidden = true;
     this.doc.documentElement.removeAttribute("concept-agent-open");
+    this.doc.documentElement.removeAttribute("concept-agent-docked");
+    if (this.agentReturnFocus?.isConnected) this.agentReturnFocus.focus();
+    else this.win.gBrowser.selectedBrowser?.focus();
+  }
+  toggleAgentDock() {
+    this.agentDocked = !this.agentDocked;
+    this.agentPanel.toggleAttribute("concept-docked", this.agentDocked);
+    this.doc.documentElement.toggleAttribute(
+      "concept-agent-docked",
+      this.agentDocked && !this.agentPanel.hidden,
+    );
+    const label = this.agentDocked ? "Undock agent" : "Dock agent";
+    this.agentDockButton.title = label;
+    this.agentDockButton.setAttribute("aria-label", label);
+    if (!this.agentDocked) this.clampAgentPanel();
+  }
+  clampAgentPanel() {
+    if (!this.agentPosition || this.agentDocked || this.agentPanel.hidden)
+      return;
+    const rect = this.agentPanel.getBoundingClientRect();
+    const left = Math.max(
+      8,
+      Math.min(this.agentPosition.left, this.win.innerWidth - rect.width - 8),
+    );
+    const top = Math.max(
+      44,
+      Math.min(this.agentPosition.top, this.win.innerHeight - rect.height - 8),
+    );
+    this.agentPosition = { left, top };
+    this.agentPanel.style.left = left + "px";
+    this.agentPanel.style.top = top + "px";
+    this.agentPanel.style.right = "auto";
+  }
+  dragAgentPanel(header) {
+    header.addEventListener("pointerdown", (event) => {
+      if (
+        this.agentDocked ||
+        event.button !== 0 ||
+        event.target.closest("button")
+      )
+        return;
+      const rect = this.agentPanel.getBoundingClientRect();
+      const offsetX = event.clientX - rect.left;
+      const offsetY = event.clientY - rect.top;
+      header.setPointerCapture(event.pointerId);
+      this.agentPanel.setAttribute("concept-dragging", "true");
+      const move = (moveEvent) => {
+        if (moveEvent.pointerId !== event.pointerId) return;
+        this.agentPosition = {
+          left: moveEvent.clientX - offsetX,
+          top: moveEvent.clientY - offsetY,
+        };
+        this.clampAgentPanel();
+      };
+      const finish = () => {
+        header.removeEventListener("pointermove", move);
+        header.removeEventListener("pointerup", finish);
+        header.removeEventListener("pointercancel", finish);
+        this.agentPanel.removeAttribute("concept-dragging");
+      };
+      header.addEventListener("pointermove", move);
+      header.addEventListener("pointerup", finish);
+      header.addEventListener("pointercancel", finish);
+    });
   }
   async performBrowserTool(tool, tab) {
     if (tool !== "browser.page.snapshot")
@@ -347,8 +457,16 @@ class BrowserConcept {
       return;
     }
     const controller = new AbortController();
+    const runId = this.taskState.createRun({
+      taskId: agent.id,
+      spaceId: context.spaceId,
+    }).runId;
+    this.taskState.transition(runId, "queued");
+    this.taskState.transition(runId, "running");
+    this.taskState.transition(runId, "awaiting-permission");
     this.runningTools.set(agent.id, {
       controller,
+      runId,
       tab,
       spaceId: context.spaceId,
       url: sourceURL,
@@ -359,7 +477,7 @@ class BrowserConcept {
     const event = this.node("div", "concept-tool-event");
     event.append(
       this.node("span", "concept-tool-event-dot"),
-      this.node("strong", "", "browser.page.snapshot"),
+      this.node("strong", "", "Read this page"),
       this.node("span", "concept-tool-event-state", "Waiting for permission"),
     );
     controls.trace.append(event);
@@ -383,6 +501,9 @@ class BrowserConcept {
                 `Allow “${agent.name}” to read the text of “${tab.label}”?`,
               ),
             onAuthorized: () => {
+              this.taskState.transition(runId, "running", {
+                summary: "Tab access allowed",
+              });
               this.setAgentActivity(tab, agent, {
                 working: true,
                 color: this.agentColor(agent),
@@ -395,6 +516,19 @@ class BrowserConcept {
             },
           }),
         onEvent: (entry) => {
+          if (entry.type === "tool-requested")
+            this.taskState.appendEvent(runId, {
+              kind: "tool-requested",
+              summary: "Read this page requested",
+            });
+          if (entry.type === "tool-finished")
+            this.taskState.appendEvent(runId, {
+              kind: "tool-finished",
+              summary:
+                entry.status === "denied"
+                  ? "Tab access declined"
+                  : `Page read: ${entry.characters} characters`,
+            });
           if (entry.type === "tool-finished")
             event.querySelector(".concept-tool-event-state").textContent =
               entry.status === "denied"
@@ -407,10 +541,16 @@ class BrowserConcept {
         { signal: controller.signal },
       );
       if (response.status === "denied") {
+        this.taskState.transition(runId, "failed", {
+          summary: "Tab access declined",
+        });
         outcome = "Permission declined";
         controls.status.textContent = "Saved";
         controls.message.textContent = "Tab access was declined.";
       } else {
+        this.taskState.transition(runId, "completed", {
+          summary: "Page read completed",
+        });
         const page = response.result;
         outcome = `${page.text.length.toLocaleString()} chars`;
         controls.status.textContent = "Page ready";
@@ -424,16 +564,40 @@ class BrowserConcept {
           "Page inspected locally. The agent model is not connected yet.";
       }
     } catch (error) {
-      if (error.message !== "Tool cancelled")
+      const run = this.taskState.getRun(runId);
+      if (
+        error.message === "Tool cancelled" ||
+        error.message === "Run cancelled"
+      ) {
+        if (["queued", "running", "awaiting-permission"].includes(run.status)) {
+          this.taskState.transition(runId, "stopping");
+          this.taskState.transition(runId, "cancelled");
+        }
+      } else if (
+        ["queued", "running", "awaiting-permission"].includes(run.status)
+      ) {
+        this.taskState.transition(runId, "failed", {
+          summary: "Page read failed",
+        });
+      }
+      if (!["Tool cancelled", "Run cancelled"].includes(error.message))
         console.error("Agent page inspection failed:", error);
       controls.status.textContent = "Saved";
-      event.querySelector(".concept-tool-event-state").textContent =
-        error.message === "Tool cancelled" ? "Stopped" : "Could not read page";
-      controls.message.textContent =
-        error.message === "Tool cancelled"
-          ? "Page read stopped."
-          : "Could not inspect this page.";
-      outcome = error.message === "Tool cancelled" ? "Stopped" : outcome;
+      event.querySelector(".concept-tool-event-state").textContent = [
+        "Tool cancelled",
+        "Run cancelled",
+      ].includes(error.message)
+        ? "Stopped"
+        : "Could not read page";
+      controls.message.textContent = [
+        "Tool cancelled",
+        "Run cancelled",
+      ].includes(error.message)
+        ? "Page read stopped."
+        : "Could not inspect this page.";
+      outcome = ["Tool cancelled", "Run cancelled"].includes(error.message)
+        ? "Stopped"
+        : outcome;
     } finally {
       if (activated) this.setAgentActivity(tab, agent, { working: false });
       this.runningTools.delete(agent.id);
@@ -450,26 +614,37 @@ class BrowserConcept {
     this.address.textContent = text;
     this.win.setTimeout(() => this.updateAddress(), 3000);
   }
+  showSiteTitle() {
+    this.root.classList.add("concept-title-visible");
+    this.win.clearTimeout(this.siteTitleTimer);
+    this.siteTitleTimer = this.win.setTimeout(
+      () => this.root.classList.remove("concept-title-visible"),
+      2400,
+    );
+  }
   updateAddress() {
     const tab = this.win.gBrowser.selectedTab;
-    const spaces = this.win.gZenWorkspaces.getWorkspaces();
-    const index = Math.max(
-      0,
-      spaces.findIndex((space) => space.uuid === this.spaceId),
-    );
+    const url = this.win.gBrowser.selectedBrowser.currentURI.spec;
+    const title = (tab?.label || "New Tab").slice(0, 80);
+    this.siteBadge.replaceChildren();
+    if (safeWebURL(url)) {
+      const favicon = this.node("img");
+      favicon.src =
+        tab?.image || tab?.getAttribute("image") || "page-icon:" + url;
+      favicon.alt = "";
+      favicon.addEventListener(
+        "error",
+        () => favicon.replaceWith(this.icon("globe")),
+        { once: true },
+      );
+      this.siteBadge.append(favicon);
+    } else this.siteBadge.append(this.icon("globe"));
+    this.siteBadge.setAttribute("aria-label", "Open notch for " + title);
     this.address.replaceChildren(
-      this.spaceIcon(spaces[index], index),
-      this.node(
-        "span",
-        "concept-address-label",
-        (tab?.label || "New Tab").slice(0, 80),
-      ),
+      this.node("span", "concept-address-label", title),
     );
-    this.address.title = this.win.gBrowser.selectedBrowser.currentURI.spec;
-    this.address.setAttribute(
-      "aria-label",
-      "Search or edit address: " + (tab?.label || "New Tab"),
-    );
+    this.address.title = url;
+    this.address.setAttribute("aria-label", "Search or edit address: " + title);
   }
   toggle(open = !this.shelf.hidden) {
     // No argument toggles; an explicit boolean sets the open state.
@@ -488,8 +663,105 @@ class BrowserConcept {
     if (!this.shelf.hidden) this.renderShelf();
     this.renderAgents();
   }
+  trailValue(tab, key) {
+    try {
+      if (this.private)
+        return key === "concept.trail.id"
+          ? tab._conceptTrailId
+          : tab._conceptTrailParent;
+      return SessionStore.getCustomTabValue(tab, key);
+    } catch {
+      return "";
+    }
+  }
+  clearTrailParent(tab) {
+    tab.removeAttribute("concept-trail-parent");
+    if (this.private) delete tab._conceptTrailParent;
+    else {
+      try {
+        SessionStore.deleteCustomTabValue(tab, "concept.trail.parent");
+      } catch (error) {
+        console.error("Could not clear Trail parent:", error);
+      }
+    }
+  }
+  closeTrailParent(closedTab) {
+    const id = this.trailValue(closedTab, "concept.trail.id");
+    if (!id) return;
+    for (const tab of this.win.gBrowser.tabs) {
+      if (tab === closedTab) continue;
+      if (this.trailValue(tab, "concept.trail.parent") === id)
+        this.clearTrailParent(tab);
+    }
+    this.scheduleTrailRender();
+  }
+  scheduleTrailRender(reconcile = false) {
+    this.reconcileTrails ||= reconcile;
+    if (this.trailRenderTimer) return;
+    this.trailRenderTimer = this.win.setTimeout(() => {
+      this.trailRenderTimer = null;
+      const shouldReconcile = this.reconcileTrails;
+      this.reconcileTrails = false;
+      this.renderTrails({ reconcile: shouldReconcile });
+    }, 0);
+  }
+  renderTrails({ reconcile = false } = {}) {
+    const tabs = [...this.win.gBrowser.tabs].filter(
+      (tab) =>
+        !tab.hasAttribute("zen-glance-tab") &&
+        !tab.hasAttribute("zen-empty-tab"),
+    );
+    const byId = new Map();
+    const nodes = new Map();
+    for (const tab of tabs) {
+      let id = this.trailValue(tab, "concept.trail.id");
+      if (id && byId.has(id)) {
+        id = Services.uuid.generateUUID().toString().slice(1, -1);
+        try {
+          if (this.private) tab._conceptTrailId = id;
+          else SessionStore.setCustomTabValue(tab, "concept.trail.id", id);
+        } catch (error) {
+          console.error("Could not repair duplicate Trail ID:", error);
+          id = "";
+        }
+        this.clearTrailParent(tab);
+      }
+      const node = {
+        id,
+        parentId: this.trailValue(tab, "concept.trail.parent"),
+        spaceId: tab.getAttribute("zen-workspace-id"),
+      };
+      nodes.set(tab, node);
+      if (id) byId.set(id, node);
+    }
+    for (const tab of tabs) {
+      const { depth: level, issue } = trailDepth(nodes.get(tab), byId);
+      if (issue === "space" || (issue && reconcile)) this.clearTrailParent(tab);
+      if (level) {
+        if (tab.getAttribute("concept-trail-depth") !== String(level))
+          tab.setAttribute("concept-trail-depth", String(level));
+        const parentId = this.trailValue(tab, "concept.trail.parent");
+        if (tab.getAttribute("concept-trail-parent") !== parentId)
+          tab.setAttribute("concept-trail-parent", parentId);
+        tab.style.setProperty(
+          "--concept-trail-indent",
+          `${Math.min(3, level) * 17}px`,
+        );
+      } else {
+        tab.removeAttribute("concept-trail-depth");
+        tab.style.removeProperty("--concept-trail-indent");
+      }
+    }
+  }
   renderShelf() {
     this.shelf.replaceChildren();
+    const cardCount = this.items.length;
+    this.notch.style.setProperty(
+      "--concept-shelf-width",
+      (this.path.length
+        ? Math.min(700, Math.max(360, 18 + cardCount * 134))
+        : 700) + "px",
+    );
     const top = this.node("div", "concept-shelf-top");
     const search = this.node("input", "concept-pin-search");
     search.placeholder = "Find a pin…";
@@ -521,8 +793,12 @@ class BrowserConcept {
         this.renderShelf();
       });
       home.append(
-        this.icon("home"),
-        this.node("span", "", active?.name || "Home"),
+        this.spaceIcon(active),
+        this.node(
+          "span",
+          "",
+          active?.name === "Space" ? "Home" : active?.name || "Home",
+        ),
       );
       nav.append(home);
       let list = this.space.items;
@@ -736,6 +1012,8 @@ class BrowserConcept {
   }
 
   showAgentPanel(prompt, context = {}, existingAgent = null) {
+    if (!this.agentPanel.contains(this.doc.activeElement))
+      this.agentReturnFocus = this.doc.activeElement;
     context = {
       url: this.win.gBrowser.selectedBrowser.currentURI.spec,
       spaceId: this.spaceId,
@@ -744,24 +1022,35 @@ class BrowserConcept {
     this.agentPanel.replaceChildren();
     this.agentPanel.hidden = false;
     this.doc.documentElement.setAttribute("concept-agent-open", "true");
+    this.agentPanel.toggleAttribute("concept-docked", !!this.agentDocked);
+    this.doc.documentElement.toggleAttribute(
+      "concept-agent-docked",
+      !!this.agentDocked,
+    );
+    this.clampAgentPanel();
     const header = this.node("div", "concept-agent-header");
     const status = this.node(
       "span",
       "concept-agent-status",
       existingAgent ? "Saved" : "Draft",
     );
+    const heading = this.node("strong", "", existingAgent?.name || "New agent");
     header.append(
       this.agentBody(existingAgent || {}),
-      this.node(
-        "strong",
-        "",
-        existingAgent?.persistent ? "Hyper-Agent" : "Agent task",
-      ),
+      heading,
       status,
+      (this.agentDockButton = this.iconButton("dock", "Dock agent", () =>
+        this.toggleAgentDock(),
+      )),
       this.iconButton("close", "Close agent", () => {
         this.closeAgentPanel();
       }),
     );
+    if (this.agentDocked) {
+      this.agentDockButton.title = "Undock agent";
+      this.agentDockButton.setAttribute("aria-label", "Undock agent");
+    }
+    this.dragAgentPanel(header);
     const sourceTitle = context.title || this.win.gBrowser.selectedTab.label;
     const source = this.node("div", "concept-agent-source");
     if (safeWebURL(context.url)) {
@@ -774,8 +1063,21 @@ class BrowserConcept {
     source.append(sourceText);
     source.title = context.url;
     this.agentPanel.append(header, source);
-    if (context.selection)
-      this.agentPanel.append(this.node("blockquote", "", context.selection));
+    if (context.selection) {
+      const selection = this.node("details", "concept-agent-selection");
+      const preview = context.selection.trim().replace(/\s+/g, " ");
+      selection.append(
+        this.node(
+          "summary",
+          "",
+          "Selected text · " +
+            preview.slice(0, 92) +
+            (preview.length > 92 ? "…" : ""),
+        ),
+        this.node("blockquote", "", context.selection),
+      );
+      this.agentPanel.append(selection);
+    }
     const input = this.node("textarea", "concept-agent-input");
     input.value = prompt;
     input.placeholder = "What would you like to do?";
@@ -820,7 +1122,7 @@ class BrowserConcept {
       const prior = this.node("div", "concept-tool-event");
       prior.append(
         this.node("span", "concept-tool-event-dot"),
-        this.node("strong", "", "browser.page.snapshot"),
+        this.node("strong", "", "Read this page"),
         this.node("span", "concept-tool-event-state", outcome),
       );
       trace.append(prior);
@@ -857,6 +1159,7 @@ class BrowserConcept {
         }
         const saved = await this.save();
         this.renderAgents();
+        heading.textContent = draft.name;
         status.textContent = "Saved";
         inspect.disabled = !saved;
         message.textContent = saved
@@ -920,6 +1223,9 @@ class BrowserConcept {
     );
   }
   destroy() {
+    this.win.clearTimeout(this.siteTitleTimer);
+    this.win.clearTimeout(this.trailRenderTimer);
+    this.trailSpaceObserver?.disconnect();
     ConceptStore.listeners.delete(this.storeListener);
     this.win.gBrowser.tabContainer.removeEventListener(
       "TabSelect",
@@ -933,7 +1239,15 @@ class BrowserConcept {
       "TabClose",
       this.onEvent,
     );
+    this.win.gBrowser.tabContainer.removeEventListener("TabOpen", this.onEvent);
+    this.win.gBrowser.tabContainer.removeEventListener("TabMove", this.onEvent);
+    this.win.gBrowser.tabContainer.removeEventListener(
+      "SSTabRestored",
+      this.onEvent,
+    );
     this.win.removeEventListener("ZenWorkspacesUIUpdate", this.onEvent);
+    this.win.removeEventListener("SSWindowRestored", this.onEvent);
+    this.win.removeEventListener("resize", this.onAgentResize);
     this.doc.removeEventListener("keydown", this.onEvent, true);
     this.doc.removeEventListener("pointerdown", this.onEvent, true);
   }

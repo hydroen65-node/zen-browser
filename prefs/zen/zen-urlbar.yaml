@@ -12,7 +12,7 @@
   value: false
 
 - name: zen.urlbar.behavior
-  value: floating-on-type
+  value: float
 
 - name: zen.urlbar.wait-to-clear
   value: 45000

@@ -105,6 +105,24 @@ export function safeWebURL(raw) {
   }
 }
 
+/** Resolve a tab's link-provenance depth without consulting browser state. */
+export function trailDepth(node, byId) {
+  const seen = new Set();
+  let current = node;
+  let depth = 0;
+  while (current.parentId) {
+    if (seen.has(current.parentId)) return { depth: 0, issue: "cycle" };
+    const parent = byId.get(current.parentId);
+    if (!parent) return { depth: 0, issue: "missing" };
+    if (current.spaceId && parent.spaceId && current.spaceId !== parent.spaceId)
+      return { depth: 0, issue: "space" };
+    seen.add(current.parentId);
+    current = parent;
+    depth++;
+  }
+  return { depth: Math.min(depth, 6), issue: null };
+}
+
 /** A narrow gate between an untrusted task plan and privileged browser tools. */
 export class AgentToolGate {
   constructor(ownership, perform) {

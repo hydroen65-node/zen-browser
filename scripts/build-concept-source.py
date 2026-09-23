@@ -77,11 +77,14 @@ def build():
             module = archive.read('chrome/browser/content/browser/zen-components/BrowserConcept.mjs')
             stylesheet = archive.read('chrome/browser/content/browser/zen-styles/browser-concept.css')
             agent_run = archive.read('modules/zen/concept/AgentRun.sys.mjs')
+            task_state = archive.read('modules/zen/concept/ConceptTaskState.sys.mjs')
         for content, name in ((module, 'BrowserConcept.mjs'), (stylesheet, 'browser-concept.css')):
             if content != (ROOT / 'src/zen/concept' / name).read_bytes():
                 raise SystemExit('UI package is stale. Run npm run build:ui, then cd engine && ./mach package.')
         if agent_run != (ROOT / 'src/zen/concept/AgentRun.sys.mjs').read_bytes():
             raise SystemExit('Agent runner package is stale. Run npm run build:ui, then cd engine && ./mach package.')
+        if task_state != (ROOT / 'src/zen/concept/ConceptTaskState.sys.mjs').read_bytes():
+            raise SystemExit('Agent state package is stale. Run npm run build:ui, then cd engine && ./mach package.')
         info_path = contents / 'Info.plist'
         info = plistlib.loads(info_path.read_bytes())
         info.update(CFBundleIdentifier='local.browserconcept.sierra-source',
@@ -126,6 +129,7 @@ user_pref("zen.watermark.enabled", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.startup.homepage_override.mstone", "ignore");
 user_pref("zen.view.use-single-toolbar", true);
+user_pref("zen.urlbar.behavior", "float");
 user_pref("datareporting.policy.dataSubmissionEnabled", false);
 user_pref("toolkit.telemetry.enabled", false);
 ''')

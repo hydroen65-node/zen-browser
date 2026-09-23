@@ -38,6 +38,7 @@ def build():
         'chrome/browser/content/browser/zen-styles/browser-concept.css':(source/'browser-concept.css').read_bytes(),
         'modules/zen/concept/ConceptStore.sys.mjs':(source/'ConceptStore.sys.mjs').read_bytes(),
         'modules/zen/concept/ConceptModel.sys.mjs':(source/'ConceptModel.sys.mjs').read_bytes(),
+        'modules/zen/concept/ConceptTaskState.sys.mjs':(source/'ConceptTaskState.sys.mjs').read_bytes(),
         'modules/zen/concept/AgentRun.sys.mjs':(source/'AgentRun.sys.mjs').read_bytes(),
         'actors/ConceptCursorParent.sys.mjs':(source/'actors/ConceptCursorParent.sys.mjs').read_bytes(),
         'actors/ConceptCursorChild.sys.mjs':(source/'actors/ConceptCursorChild.sys.mjs').read_bytes(),
@@ -85,6 +86,7 @@ user_pref("zen.watermark.enabled", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.startup.homepage_override.mstone", "ignore");
 user_pref("zen.view.use-single-toolbar", true);
+user_pref("zen.urlbar.behavior", "float");
 ''')
     # A development overlay must not update itself over the fork's modifications.
     # The installed production Zen is untouched and keeps its update policy.

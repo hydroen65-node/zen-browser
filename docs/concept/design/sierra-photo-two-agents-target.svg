@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1410" height="825" viewBox="0 0 1410 825">
+  <defs>
+    <linearGradient id="frame" x2="1" y2="1"><stop stop-color="#1b2a2f"/><stop offset="1" stop-color="#1b2025"/></linearGradient>
+    <linearGradient id="photoShade" x2="0" y2="1"><stop stop-color="#101c25" stop-opacity=".28"/><stop offset=".34" stop-color="#101c25" stop-opacity="0"/><stop offset="1" stop-color="#06121a" stop-opacity=".5"/></linearGradient>
+    <radialGradient id="blue"><stop stop-color="#d8edff" stop-opacity=".92"/><stop offset=".2" stop-color="#82bfff" stop-opacity=".7"/><stop offset=".56" stop-color="#5a9cff" stop-opacity=".25"/><stop offset="1" stop-color="#5a9cff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="amber"><stop stop-color="#fff0da" stop-opacity=".9"/><stop offset=".2" stop-color="#ffc895" stop-opacity=".67"/><stop offset=".56" stop-color="#e99d63" stop-opacity=".24"/><stop offset="1" stop-color="#e99d63" stop-opacity="0"/></radialGradient>
+    <filter id="glow" x="-70%" y="-120%" width="240%" height="340%"><feGaussianBlur stdDeviation="12"/></filter>
+    <clipPath id="page"><rect x="238" y="42" width="1164" height="775" rx="12"/></clipPath>
+    <clipPath id="tabs"><rect x="0" y="0" width="234" height="825"/></clipPath>
+    <style>
+      text{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
+      .tab{fill:#d7e1e4;font-size:12.5px}
+      .secondary{fill:#a4b5bb;font-size:11px}
+      .icon{fill:none;stroke:#b7c8ca;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
+    </style>
+  </defs>
+
+  <rect width="1410" height="825" fill="url(#frame)"/>
+  <path d="M233.5 0V825" stroke="#b9d4d9" stroke-opacity=".12"/>
+  <g clip-path="url(#page)">
+    <image x="238" y="42" width="1164" height="775" preserveAspectRatio="xMidYMid slice" xlink:href="sierra-lake-photo.png"/>
+    <rect x="238" y="42" width="1164" height="775" fill="url(#photoShade)"/>
+    <text x="272" y="91" fill="#f8fbf9" font-size="14" font-weight="680" letter-spacing="2.4">FIELD NOTES</text>
+    <path d="M1269 79h100" stroke="#fff" stroke-opacity=".35"/>
+    <text x="1369" y="99" text-anchor="end" fill="#f8fbf9" font-size="12">Places</text>
+    <text x="1369" y="120" text-anchor="end" fill="#f8fbf9" font-size="12" fill-opacity=".8">Journal</text>
+    <text x="272" y="710" fill="#fbfcf9" font-size="48" font-weight="550" letter-spacing="-1.9">North Lake</text>
+    <text x="274" y="741" fill="#f3f7f5" fill-opacity=".88" font-size="14">A quiet morning in the Sierra Nevada</text>
+    <text x="274" y="781" fill="#f3f7f5" fill-opacity=".72" font-size="11" letter-spacing="1.2">37.22° N  ·  118.47° W</text>
+  </g>
+
+  <!-- Native navigation and settled sidebar. Two real tabs show owned agent work. -->
+  <circle cx="19" cy="21" r="5.2" fill="#ff675f"/><circle cx="39" cy="21" r="5.2" fill="#f5bf4f"/><circle cx="59" cy="21" r="5.2" fill="#53c36b"/>
+  <path class="icon" d="M104 21h12m-6-5-5 5 5 5M141 21h12m-5-5 5 5-5 5M180 16a7 7 0 1 1-4 12m4-12v5h-5"/>
+  <rect x="10" y="57" width="212" height="34" rx="9" fill="#d8e9e7" fill-opacity=".1"/>
+  <rect x="21" y="65" width="18" height="18" rx="5" fill="#e7ece9"/>
+  <text x="30" y="78" text-anchor="middle" fill="#25373a" font-size="11" font-weight="700">F</text>
+  <text x="48" y="79" class="tab">Field Notes</text>
+  <rect x="21" y="105" width="18" height="16" rx="3" fill="#6e9892"/>
+  <path d="M21 109h7l3 3h8" stroke="#cee3dc" stroke-width="1.2" fill="none"/>
+  <text x="48" y="118" class="tab">Travel</text>
+  <path d="M17 145H218" stroke="#dce7e8" stroke-opacity=".15"/>
+  <g clip-path="url(#tabs)">
+    <ellipse cx="97" cy="177" rx="115" ry="28" fill="#559fff" fill-opacity=".39" filter="url(#glow)"/>
+    <ellipse cx="128" cy="249" rx="102" ry="25" fill="#f4b782" fill-opacity=".33" filter="url(#glow)"/>
+    <rect x="10" y="158" width="212" height="37" rx="9" fill="#cadde7" fill-opacity=".13"/>
+    <rect x="10" y="232" width="212" height="34" rx="9" fill="#ecb786" fill-opacity=".07"/>
+  </g>
+  <rect x="21" y="168" width="17" height="17" rx="5" fill="#e7ece9"/>
+  <text x="29.5" y="180" text-anchor="middle" fill="#25373a" font-size="10" font-weight="700">F</text>
+  <text x="48" y="182" class="tab" font-weight="600">North Lake</text>
+  <path d="M28 196v62m0-41h13m0 32h13" stroke="#8fb6bb" stroke-opacity=".57" stroke-width="1.2" fill="none"/>
+  <text x="48" y="216" class="secondary">Trail map</text>
+  <rect x="52" y="240" width="16" height="16" rx="4" fill="#dfe7e5"/>
+  <path d="M55 251l3-6 3 4 2-3 3 5" stroke="#516b6a" stroke-width="1.2" fill="none"/>
+  <text x="76" y="253" class="tab">Route details</text>
+  <text x="21" y="298" class="secondary">+</text><text x="43" y="298" class="secondary">New Tab</text>
+
+  <!-- Agent identities: light bodies rather than hard badges. -->
+  <path d="M16 767H218" stroke="#dce7e8" stroke-opacity=".13"/>
+  <ellipse cx="35" cy="794" rx="28" ry="17" fill="url(#blue)" transform="rotate(-14 35 794)"/>
+  <ellipse cx="79" cy="794" rx="27" ry="16" fill="url(#amber)" transform="rotate(12 79 794)"/>
+  <path class="icon" d="M124 788v13m-6.5-6.5h13"/>
+  <text x="204" y="799" class="secondary" text-anchor="end">⌄</text>
+
+  <!-- Closed notch has no open shelf, popup, or agent panel. -->
+  <path d="M584 0Q608 0 608 22Q608 38 624 38H786Q802 38 802 22Q802 0 826 0Z" fill="#050607"/>
+  <path d="M608 22Q608 38 624 38H786Q802 38 802 22" fill="none" stroke="#dce9e9" stroke-opacity=".12"/>
+  <rect x="567" y="4" width="30" height="30" rx="10" fill="#050607" stroke="#dce9e9" stroke-opacity=".13"/>
+  <text x="582" y="25" text-anchor="middle" fill="#e7ebeb" font-size="17" font-weight="700">F</text>
+</svg>

@@ -2,6 +2,43 @@ diff --git a/browser/components/tabbrowser/Tabbrowser.sys.mjs b/browser/componen
 index f68e37926001384d0c8e80a3c163dc89e9c4ee5c..a9a5dfbc38348f2c070f22af2954a089db94a6d3 100644
 --- a/browser/components/tabbrowser/Tabbrowser.sys.mjs
 +++ b/browser/components/tabbrowser/Tabbrowser.sys.mjs
+@@ -108,7 +108,35 @@
+ const DIRECTION_FORWARD = 1;
+ const DIRECTION_BACKWARD = -1;
+ const TAB_LABEL_MAX_LENGTH = 256;
+-
++
++const CONCEPT_TRAIL_ID_KEY = "concept.trail.id";
++const CONCEPT_TRAIL_PARENT_KEY = "concept.trail.parent";
++const CONCEPT_TRAIL_PARENT_ATTRIBUTE = "concept-trail-parent";
++
++function getConceptTrailId(tab, isPrivate) {
++  let id = isPrivate
++    ? tab._conceptTrailId
++    : lazy.SessionStore.getCustomTabValue(tab, CONCEPT_TRAIL_ID_KEY);
++  if (!id) {
++    id = Services.uuid.generateUUID().toString().slice(1, -1);
++    if (isPrivate) {
++      tab._conceptTrailId = id;
++    } else {
++      lazy.SessionStore.setCustomTabValue(tab, CONCEPT_TRAIL_ID_KEY, id);
++    }
++  }
++  return id;
++}
++
++function setConceptTrailParent(tab, parentId, isPrivate) {
++  tab.setAttribute(CONCEPT_TRAIL_PARENT_ATTRIBUTE, parentId);
++  if (isPrivate) {
++    tab._conceptTrailParent = parentId;
++  } else {
++    lazy.SessionStore.setCustomTabValue(tab, CONCEPT_TRAIL_PARENT_KEY, parentId);
++  }
++}
++
+ /**
+  * Updates the User Context UI indicators if the browser is in a non-default context
+  */
 @@ -484,6 +484,7 @@ export class Tabbrowser {
     * @type {MozBrowser[]}
     */
@@ -370,10 +407,57 @@ index f68e37926001384d0c8e80a3c163dc89e9c4ee5c..a9a5dfbc38348f2c070f22af2954a089
  
      // Find the tab that opened this one, if any. This is used for
      // determining positioning, and inherited attributes such as the
-@@ -3744,6 +3878,22 @@ export class Tabbrowser {
+@@ -3710,5 +3875,37 @@ export class Tabbrowser {
+     let openerTab =
+       (openerBrowser && this.getTabForBrowser(openerBrowser)) ||
+       (relatedToCurrent && this.selectedTab) ||
+       null;
++
++    let conceptTrailParent = null;
++    let conceptTrailPrivate = false;
++    if (Services.prefs.getBoolPref("browser.concept.enabled", false)) {
++      conceptTrailPrivate = lazy.PrivateBrowsingUtils.isWindowPrivate(
++        this.documentGlobal
++      );
++      const isOrdinarySource = candidate =>
++        candidate &&
++        this.isTab(candidate) &&
++        candidate.isConnected &&
++        !candidate.closing &&
++        !candidate.removedByAdoption &&
++        candidate.documentGlobal === this.documentGlobal &&
++        lazy.PrivateBrowsingUtils.isWindowPrivate(candidate.documentGlobal) ===
++          conceptTrailPrivate &&
++        !candidate.hasAttribute("zen-empty-tab") &&
++        !candidate.hasAttribute("zen-glance-tab") &&
++        candidate !== this.documentGlobal.FirefoxViewHandler?.tab;
++
++      if (openerBrowser) {
++        const candidate = this.getTabForBrowser(openerBrowser);
++        if (isOrdinarySource(candidate)) {
++          conceptTrailParent = candidate;
++        }
++      } else if (relatedToCurrent && referrerInfo?.originalReferrer) {
++        const candidate = this.selectedTab;
++        if (isOrdinarySource(candidate)) {
++          conceptTrailParent = candidate;
++        }
++      }
++    }
+
+@@ -3744,6 +3878,31 @@ export class Tabbrowser {
          noInitialLabel,
          skipBackgroundNotify,
        });
++      if (conceptTrailParent && conceptTrailParent !== t) {
++        const parentId = getConceptTrailId(
++          conceptTrailParent,
++          conceptTrailPrivate
++        );
++        if (parentId) {
++          setConceptTrailParent(t, parentId, conceptTrailPrivate);
++        }
++      }
 +      if (hasZenDefaultUserContextId) {
 +        t.setAttribute("zenDefaultUserContextId", "true");
 +      }
