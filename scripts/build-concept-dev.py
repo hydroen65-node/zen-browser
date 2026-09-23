@@ -7,26 +7,14 @@
 This is not a full Gecko compilation. Source integrations under src/zen/concept
 are identical to the full build. Never patch the installed application/profile.
 """
-import hashlib, io, json, plistlib, shutil, struct, subprocess, tempfile, zipfile
+import hashlib, json, plistlib, shutil, subprocess, tempfile, zipfile
+from concept_bundle import read_omni
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 BASE=Path('/Applications/Zen.app')
 APP=ROOT/'dist'/'Sierra Dev.app'
 PROFILE=ROOT/'.concept-profile'
 
-def read_omni(path):
-    data=path.read_bytes()
-    try:return zipfile.ZipFile(io.BytesIO(data))
-    except zipfile.BadZipFile:
-        # Mozilla optimized jars put their directory first. Preserve local-file
-        # offsets and append a standard central directory for Python's reader.
-        end=data.rfind(b'PK\x05\x06')
-        if end<0:raise ValueError('Missing ZIP end record')
-        record=list(struct.unpack('<4s4H2IH',data[end:end+22]))
-        size,start=record[5:7]
-        if data[start:start+4]!=b'PK\x01\x02':raise ValueError('Invalid central directory')
-        record[6]=end
-        return zipfile.ZipFile(io.BytesIO(data[:end]+data[start:start+size]+struct.pack('<4s4H2IH',*record)))
 
 def build():
     global APP

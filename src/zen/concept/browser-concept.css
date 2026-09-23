@@ -33,7 +33,10 @@
   border: 0 !important;
   background: transparent !important;
 }
-:root[browser-concept] #urlbar-container {
+:root[browser-concept]
+  #urlbar-container:not(
+    :has(#urlbar:is([focused], [open], [breakout-extend]))
+  ) {
   min-height: 0 !important;
   height: 0 !important;
   margin-block: 0 !important;
@@ -51,8 +54,7 @@
 :root[browser-concept] .zen-current-workspace-indicator,
 :root[browser-concept] #zen-current-workspace-indicator-container,
 :root[browser-concept] #zen-workspaces-button,
-:root[browser-concept] #zen-create-new-button,
-:root[browser-concept] #zen-clear-tabs-button {
+:root[browser-concept] #zen-create-new-button {
   display: none !important;
 }
 :root[browser-concept] .tabbrowser-tab {

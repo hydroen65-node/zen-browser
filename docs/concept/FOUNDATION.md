@@ -18,9 +18,9 @@ The source branch is based on upstream `dev` (Firefox 156 / Zen 1.22.3b). Its en
 
 ## Locally compiled engine
 
-The full Firefox 156 / Zen source build completed successfully (95 minutes with two local jobs). Incremental UI builds use `npm run build:ui`. `python3 scripts/build-concept-source.py` assembles `dist/Sierra Source.app`, resolves build symlinks and gives it a separate `.concept-source-profile`. Do not launch the raw Nightly.app against a normal browsing profile.
+The full Firefox 156 / Zen source build completed successfully (95 minutes with two local jobs). Incremental UI builds use `npm run build:ui`, followed by `cd engine && ./mach package`. `python3 scripts/build-concept-source.py` then assembles `dist/Sierra Source.app`, resolves build symlinks and gives it a separate `.concept-source-profile`. Do not launch the raw Nightly.app against a normal browsing profile.
 
-The source app launches, but its first native run exposed a localization initialization problem (unlabeled native controls and Fluent lookup errors). It is an experimental build, not the recommended development app yet. Continue using Sierra Dev for UI work until that runtime issue is resolved. Both builders verify their app signatures and refuse to overwrite an unrecognized or running destination.
+The first source app assembled from the raw developer layout launched with unlabeled controls and Fluent lookup errors. The source builder now requires Mozilla’s packaged layout with `browser/omni.ja`; `mach package` and the corrected assembly both succeeded. Native launch of this corrected bundle is pending because the Mac locked. Continue using Sierra Dev for UI work until that runtime check passes. Both builders verify their app signatures and refuse to overwrite an unrecognized or running destination.
 
 ## Implemented foundation
 
@@ -41,7 +41,7 @@ The source app launches, but its first native run exposed a localization initial
 5. Finish notch editing, nested folder drag-and-drop, keyboard navigation, accessible tooltips, per-space identity and depth handling. Integrate ask-agent with the native New Tab prompt.
 6. Watch and ad mechanisms: retain existing Zen functionality, implement separately bounded network rules, persistent element removal and experimental DOM classification. Do not claim the unverified “Jev” model exists.
 7. Credential broker, per-agent filesystem sandbox, scheduled jobs and persistent-agent VM lifecycle. These remain unimplemented. Keep credentials outside model context and require explicit grants for added host access.
-8. Resolve source-app localization initialization, then regression coverage for retained Zen features, update/signing strategy and platform verification before distribution.
+8. Verify localization in the packaged source app, then regression coverage for retained Zen features, update/signing strategy and platform verification before distribution.
 
 ## Resource and privacy limits
 

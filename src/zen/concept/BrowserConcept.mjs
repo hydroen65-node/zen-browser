@@ -256,6 +256,8 @@ class BrowserConcept {
       this.doc.getElementById("TabsToolbar-customization-target") ||
       this.doc.getElementById("TabsToolbar");
     this.dock = this.node("div", "concept-agent-dock");
+    this.dock.id = "concept-agent-dock";
+    this.dock.setAttribute("skipintoolbarset", "true");
     this.dock.append(
       this.iconButton("plus", "New agent", (event) => {
         const rect = event.currentTarget.getBoundingClientRect();

@@ -40,3 +40,5 @@ First target critique: New Tab looked disabled and selected tab contrast was wea
 Native re-render and interaction coverage are recorded in VALIDATION.md. A target drawing and passing code checks are not visual verification of the implementation.
 
 First native render evidence: `native-first-pass.jpg`, `native-notch-first-pass.jpg`, and `native-panel-first-pass.jpg`. These deliberately record the defects observed before the final fixes; they are not final acceptance screenshots.
+
+Final review also identified native integration hazards: preserve URL-bar sizing while focused/open, and exclude the custom dock from toolbar widget customization. Both are corrected centrally. The final render remains pending on the locked Mac, as listed in VALIDATION.md.

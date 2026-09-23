@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """Assemble an isolated development app from the locally compiled Gecko build.
 
-Run `npm run build:ui` first. No network, upstream profile, or installed app is
+Run `npm run build:ui` and `cd engine && ./mach package` first. No network, upstream profile, or installed app is
 used. Resolving the build tree's symlinks makes the result self-contained.
 """
 import configparser
@@ -15,6 +15,7 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
+from concept_bundle import read_omni
 
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / 'dist' / 'Sierra Source.app'
@@ -22,9 +23,9 @@ PROFILE = ROOT / '.concept-source-profile'
 
 
 def build():
-    candidates = list((ROOT / 'engine').glob('obj-*/dist/Nightly.app'))
+    candidates = list((ROOT / 'engine').glob('obj-*/dist/zen/Nightly.app'))
     if len(candidates) != 1:
-        raise SystemExit('Expected one local Nightly.app. Complete the source build first.')
+        raise SystemExit('Expected one packaged Nightly.app. Run cd engine && ./mach package first.')
     base = candidates[0]
     if not (base / 'Contents/MacOS/XUL').is_file():
         raise SystemExit('The source engine is not built.')
@@ -39,15 +40,14 @@ def build():
         staged = Path(temp) / APP.name
         shutil.copytree(base, staged, symlinks=False)
         contents = staged / 'Contents'
-        # Verify the concept integration is actually in the compiled package.
-        module = contents / 'Resources/browser/chrome/browser/content/browser/zen-components/BrowserConcept.mjs'
-        stylesheet = contents / 'Resources/browser/chrome/browser/content/browser/zen-styles/browser-concept.css'
-        for path in (module, stylesheet):
-            if not path.is_file():
-                raise SystemExit('Missing concept source integration: ' + str(path))
-        for path, name in ((module, 'BrowserConcept.mjs'), (stylesheet, 'browser-concept.css')):
-            if path.read_bytes() != (ROOT / 'src/zen/concept' / name).read_bytes():
-                raise SystemExit('UI bundle is stale. Run npm run build:ui first.')
+        # Use Mozilla's packaged layout: raw dist/Nightly.app is a developer
+        # runtime and its resource roots differ when copied out of the tree.
+        with read_omni(contents / 'Resources/browser/omni.ja') as archive:
+            module = archive.read('chrome/browser/content/browser/zen-components/BrowserConcept.mjs')
+            stylesheet = archive.read('chrome/browser/content/browser/zen-styles/browser-concept.css')
+        for content, name in ((module, 'BrowserConcept.mjs'), (stylesheet, 'browser-concept.css')):
+            if content != (ROOT / 'src/zen/concept' / name).read_bytes():
+                raise SystemExit('UI package is stale. Run npm run build:ui, then cd engine && ./mach package.')
         info_path = contents / 'Info.plist'
         info = plistlib.loads(info_path.read_bytes())
         info.update(CFBundleIdentifier='local.browserconcept.sierra-source',
@@ -77,7 +77,7 @@ def build():
             'engine_build_id': platform.get('Build', 'BuildID'),
             'engine_source_stamp': platform.get('Build', 'SourceStamp'),
             'source_head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
-            'concept_sha256': hashlib.sha256(module.read_bytes() + stylesheet.read_bytes()).hexdigest(),
+            'concept_sha256': hashlib.sha256(module + stylesheet).hexdigest(),
         }
         (contents / 'Resources/concept-source-build.json').write_text(json.dumps(manifest, indent=2))
         PROFILE.mkdir(mode=0o700, exist_ok=True)
