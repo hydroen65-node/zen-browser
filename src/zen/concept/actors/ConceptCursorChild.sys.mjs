@@ -62,6 +62,17 @@ export class ConceptCursorChild extends JSWindowActorChild {
       title: this.document.title.slice(0, 300),
     });
   }
+  receiveMessage({ name }) {
+    if (name !== "ConceptCursor:Snapshot") return null;
+    // A content actor returns text only. It cannot select tabs, grant control,
+    // inspect password values, or decide whether an agent was authorized.
+    const doc = this.document;
+    return {
+      title: String(doc.title || "").slice(0, 300),
+      url: doc.location.href,
+      text: String(doc.body?.innerText || "").slice(0, 6000),
+    };
+  }
   didDestroy() {
     try {
       this.contentWindow?.clearTimeout(this.timer);

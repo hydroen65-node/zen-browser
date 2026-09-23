@@ -42,3 +42,11 @@ Native re-render and interaction coverage are recorded in VALIDATION.md. A targe
 First native render evidence: `native-first-pass.jpg`, `native-notch-first-pass.jpg`, and `native-panel-first-pass.jpg`. These deliberately record the defects observed before the final fixes; they are not final acceptance screenshots.
 
 Final review also identified native integration hazards: preserve URL-bar sizing while focused/open, and exclude the custom dock from toolbar widget customization. Both are corrected centrally. The final render remains pending on the locked Mac, as listed in VALIDATION.md.
+
+## Design review — 2026-09-23
+
+The native source-built app was rendered at 1410 × 825 with the actual MDN documentation page. The closed notch and 220px dark sidebar are close to the target proportions. The attached black shelf, round utilities, icon-only space switcher and horizontal cards are visible in the development profile; the source profile initially had no pins. Clicking near the physical notch shoulder opened the development shelf. The source-built shelf also opened through its native control.
+
+The right agent panel has a clear page context, permission-gated read action, one actual tool event and an editable task. It truthfully shows that no model is connected. The task composer stays at the bottom while the activity timeline occupies the top; this leaves deliberate room for future events, though the one-event case is sparse. The visible tab glow ends with the read, so an extended-running fixture is needed to judge its active appearance.
+
+The empty source shelf exposed a concrete defect: its 223px minimum height made a large vacant black area. Empty shelves now use a compact height while populated shelves keep the card dimensions. The final native re-render confirms both states, plus the folder breadcrumb state. Live website content includes MDN's own ads and hierarchy; the browser should not restyle that site merely to match the illustrative target.

@@ -133,6 +133,7 @@
   left: 50%;
   transform: translateX(-50%);
   width: 200px;
+  height: 31px;
   color: #c6c6cb;
   background: #030303;
   border-radius: 0 0 16px 16px;
@@ -169,22 +170,30 @@
 .concept-notch-trigger {
   display: grid;
   place-items: center;
-  height: 31px;
-  width: 100%;
-  border-radius: inherit !important;
+  position: absolute;
+  top: 0;
+  left: -36px;
+  height: 48px;
+  width: calc(100% + 72px);
+  border-radius: 0 !important;
   padding: 0 !important;
 }
 .concept-notch-trigger:hover {
-  background: #121212 !important;
+  background: transparent !important;
+}
+.concept-notch-trigger:hover .concept-notch-handle {
+  background: #c5c5ca;
 }
 .concept-notch-handle {
   width: 22px;
   height: 2px;
   border-radius: 2px;
   background: #78787d;
+  transform: translateY(-8px);
 }
 .concept-root.open .concept-notch {
   width: min(700px, calc(100vw - 64px));
+  height: auto;
   border-radius: 0 0 24px 24px;
   box-shadow: 0 16px 48px #0005;
 }
@@ -195,6 +204,9 @@
   box-sizing: border-box;
   padding: 13px 14px 13px;
   min-height: 223px;
+}
+.concept-shelf.empty {
+  min-height: 0;
 }
 :is(
   .concept-shelf,
@@ -301,6 +313,9 @@
   min-height: 104px;
   padding: 3px 0 0;
   scrollbar-width: thin;
+}
+.concept-shelf.empty .concept-pin-cards {
+  min-height: 32px;
 }
 .concept-pin-card {
   flex-shrink: 0;
@@ -507,6 +522,9 @@
   font-size: 11px;
   color: #9999a2;
 }
+.concept-agent-dock[concept-agent-active] {
+  background: radial-gradient(ellipse at 24% 100%, #9ac0ff22, transparent 70%);
+}
 .concept-saved-agent:is(:hover, :focus-visible) .concept-agent-tooltip {
   display: block;
 }
@@ -628,6 +646,88 @@
   color: #9696a1;
   line-height: 1.65;
   margin: 0;
+}
+.concept-tool-area {
+  min-height: 70px;
+  flex: 1;
+  overflow: auto;
+  border-top: 1px solid #ffffff10;
+  padding-top: 13px;
+}
+.concept-tool-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #aaaab3;
+  font-size: 11px;
+}
+.concept-tool-heading button {
+  border: 1px solid #ffffff1c;
+  padding: 5px 8px;
+  border-radius: 6px;
+  color: #d3d3d9;
+  font-size: 11px;
+}
+.concept-tool-heading button:not(:disabled):hover {
+  border-color: #ffffff36;
+  background: #ffffff0c;
+}
+.concept-tool-trace {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-top: 12px;
+}
+.concept-tool-event {
+  display: grid;
+  grid-template-columns: 8px 1fr auto;
+  align-items: start;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #ffffff0b;
+  font-size: 11px;
+}
+.concept-tool-event-dot {
+  width: 5px;
+  height: 5px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #a6bde5;
+  box-shadow: 0 0 7px #9ac0ff80;
+}
+.concept-tool-event strong {
+  font-weight: 500;
+  color: #d7d7de;
+}
+.concept-tool-event-state {
+  max-width: 108px;
+  color: #92929c;
+  text-align: right;
+}
+.concept-tool-output {
+  border: 1px solid #ffffff12;
+  border-radius: 7px;
+  color: #aaaab4;
+  font-size: 11px;
+}
+.concept-tool-output summary {
+  padding: 8px 10px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.concept-tool-output pre {
+  margin: 0;
+  padding: 10px;
+  border-top: 1px solid #ffffff12;
+  max-height: 180px;
+  overflow: auto;
+  color: #c0c0c9;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: 11px/1.5 system-ui;
 }
 .concept-cursor-popover {
   position: fixed;

@@ -4,6 +4,7 @@
 import {
   safeWebURL,
   AgentOwnership,
+  AgentToolGate,
 } from "resource:///modules/zen/concept/ConceptModel.sys.mjs";
 
 import { ConceptStore } from "resource:///modules/zen/concept/ConceptStore.sys.mjs";
@@ -16,6 +17,11 @@ class BrowserConcept {
     this.path = [];
     this.onEvent = this.handleEvent.bind(this);
     this.ownership = new AgentOwnership();
+    this.runningTools = new Set();
+    this.toolHistory = new Map();
+    this.toolGate = new AgentToolGate(this.ownership, (tool, tab) =>
+      this.performBrowserTool(tool, tab),
+    );
     this.data = { version: 1, spaces: {} };
   }
   node(tag, className, text) {
@@ -290,6 +296,109 @@ class BrowserConcept {
     this.agentPanel.hidden = true;
     this.doc.documentElement.removeAttribute("concept-agent-open");
   }
+  async performBrowserTool(tool, tab) {
+    if (tool !== "browser.page.snapshot")
+      throw new Error("Unknown browser tool");
+    const actor =
+      tab.linkedBrowser.browsingContext.currentWindowGlobal.getActor(
+        "ConceptCursor",
+      );
+    const result = await actor.sendQuery("ConceptCursor:Snapshot");
+    if (
+      !result ||
+      !safeWebURL(result.url) ||
+      safeWebURL(result.url) !== safeWebURL(tab.linkedBrowser.currentURI.spec)
+    )
+      throw new Error("Page could not be read");
+    return result;
+  }
+  async inspectAgentPage(agent, context, controls) {
+    if (this.runningTools.has(agent.id)) return;
+    const sourceURL = safeWebURL(context.url);
+    const tab = this.win.gBrowser.selectedTab;
+    const isCurrent = () =>
+      this.spaceId === context.spaceId &&
+      this.win.gBrowser.selectedTab === tab &&
+      safeWebURL(tab?.linkedBrowser?.currentURI?.spec) === sourceURL;
+    if (!sourceURL || !isCurrent()) {
+      controls.message.textContent = "Open this task’s page to inspect it.";
+      return;
+    }
+    this.runningTools.add(agent.id);
+    controls.button.disabled = true;
+    controls.status.textContent = "Waiting";
+    const event = this.node("div", "concept-tool-event");
+    event.append(
+      this.node("span", "concept-tool-event-dot"),
+      this.node("strong", "", "browser.page.snapshot"),
+      this.node("span", "concept-tool-event-state", "Waiting for permission"),
+    );
+    controls.trace.append(event);
+    let activated = false;
+    let outcome = "Could not read page";
+    try {
+      const response = await this.toolGate.invoke({
+        agentId: agent.id,
+        spaceId: context.spaceId,
+        tab,
+        active: true,
+        tool: "browser.page.snapshot",
+        isCurrent,
+        authorize: () =>
+          Services.prompt.confirm(
+            this.win,
+            "Use this tab?",
+            `Allow “${agent.name}” to read the text of “${tab.label}”?`,
+          ),
+        onAuthorized: () => {
+          this.setAgentActivity(tab, agent, {
+            working: true,
+            color: this.agentColor(agent),
+          });
+          activated = true;
+          this.dock.setAttribute("concept-agent-active", "true");
+          controls.status.textContent = "Reading page";
+          event.querySelector(".concept-tool-event-state").textContent =
+            "Reading page";
+        },
+      });
+      if (response.status === "denied") {
+        outcome = "Permission declined";
+        controls.status.textContent = "Saved";
+        event.querySelector(".concept-tool-event-state").textContent =
+          "Permission declined";
+        controls.message.textContent = "Tab access was declined.";
+      } else {
+        const page = response.result;
+        outcome = `${page.text.length.toLocaleString()} characters read`;
+        controls.status.textContent = "Page ready";
+        event.querySelector(".concept-tool-event-state").textContent = outcome;
+        const details = this.node("details", "concept-tool-output");
+        details.append(
+          this.node("summary", "", page.title || "Page text"),
+          this.node("pre", "", page.text.slice(0, 1200)),
+        );
+        controls.trace.append(details);
+        controls.message.textContent =
+          "Page inspected locally. The agent model is not connected yet.";
+      }
+    } catch (error) {
+      console.error("Agent page inspection failed:", error);
+      controls.status.textContent = "Saved";
+      event.querySelector(".concept-tool-event-state").textContent =
+        "Could not read page";
+      controls.message.textContent = "Could not inspect this page.";
+    } finally {
+      if (activated) this.setAgentActivity(tab, agent, { working: false });
+      this.runningTools.delete(agent.id);
+      if (!this.runningTools.size)
+        this.dock.removeAttribute("concept-agent-active");
+      controls.button.disabled = false;
+      const history = this.toolHistory.get(agent.id) || [];
+      history.push(outcome);
+      this.toolHistory.set(agent.id, history.slice(-10));
+    }
+  }
   notice(text) {
     this.address.textContent = text;
     this.win.setTimeout(() => this.updateAddress(), 3000);
@@ -469,6 +578,7 @@ class BrowserConcept {
       });
       cards.append(card);
     }
+    this.shelf.classList.toggle("empty", !cards.children.length);
     if (!cards.children.length)
       cards.append(
         this.node(
@@ -588,6 +698,11 @@ class BrowserConcept {
     this.agentPanel.hidden = false;
     this.doc.documentElement.setAttribute("concept-agent-open", "true");
     const header = this.node("div", "concept-agent-header");
+    const status = this.node(
+      "span",
+      "concept-agent-status",
+      existingAgent ? "Saved" : "Draft",
+    );
     header.append(
       this.agentBody(existingAgent || {}),
       this.node(
@@ -595,7 +710,7 @@ class BrowserConcept {
         "",
         existingAgent?.persistent ? "Hyper-Agent" : "Agent task",
       ),
-      this.node("span", "concept-agent-status", "Draft"),
+      status,
       this.iconButton("close", "Close agent", () => {
         this.closeAgentPanel();
       }),
@@ -626,8 +741,38 @@ class BrowserConcept {
     const message = this.node(
       "p",
       "concept-agent-connection",
-      "Agent execution is not connected yet. You can save the task and its page context.",
+      "Browser tools work locally. The agent model is not connected yet.",
     );
+    const toolArea = this.node("section", "concept-tool-area");
+    toolArea.setAttribute("aria-label", "Agent activity");
+    const toolHeader = this.node("div", "concept-tool-heading");
+    toolHeader.append(this.node("span", "", "Activity"));
+    const inspect = this.button(
+      "Inspect page",
+      "Read this page with the browser tool",
+      () =>
+        this.inspectAgentPage(existingAgent, context, {
+          button: inspect,
+          message,
+          status,
+          trace,
+        }),
+    );
+    inspect.disabled = !existingAgent;
+    toolHeader.append(inspect);
+    const trace = this.node("div", "concept-tool-trace");
+    trace.setAttribute("role", "log");
+    trace.setAttribute("aria-live", "polite");
+    for (const outcome of this.toolHistory.get(existingAgent?.id) || []) {
+      const prior = this.node("div", "concept-tool-event");
+      prior.append(
+        this.node("span", "concept-tool-event-dot"),
+        this.node("strong", "", "browser.page.snapshot"),
+        this.node("span", "concept-tool-event-state", outcome),
+      );
+      trace.append(prior);
+    }
+    toolArea.append(toolHeader, trace);
     const save = this.button(
       "Save task",
       "Save agent task",
@@ -659,6 +804,8 @@ class BrowserConcept {
         }
         const saved = await this.save();
         this.renderAgents();
+        status.textContent = "Saved";
+        inspect.disabled = !saved;
         message.textContent = saved
           ? this.private
             ? "Task kept for this private window. It has not started."
@@ -678,6 +825,7 @@ class BrowserConcept {
     actions.append(persistent, save);
     message.setAttribute("role", "status");
     this.agentPanel.append(
+      toolArea,
       this.node("label", "concept-input-label", "Task"),
       input,
       actions,

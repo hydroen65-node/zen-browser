@@ -14,12 +14,42 @@ import plistlib
 import shutil
 import subprocess
 import tempfile
+import zipfile
 from pathlib import Path
 from concept_bundle import read_omni
 
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / 'dist' / 'Sierra Source.app'
 PROFILE = ROOT / '.concept-source-profile'
+
+
+def add_zen_locales(omni):
+    """Package the Zen strings that the upstream source package omits."""
+    locale_root = ROOT / 'locales/en-US/browser/browser'
+    locales = sorted(locale_root.glob('zen-*.ftl'))
+    if not locales:
+        raise SystemExit('Zen localization sources are missing.')
+    additions = {
+        f'localization/en-US/browser/{path.name}': path.read_bytes()
+        for path in locales
+    }
+    brand_files = {
+        'localization/en-US/branding/brand.ftl',
+        'chrome/en-US/locale/branding/brand.properties',
+    }
+    replacement = omni.with_suffix('.ja.tmp')
+    with read_omni(omni) as source, zipfile.ZipFile(
+        replacement, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=3
+    ) as target:
+        for entry in source.infolist():
+            if entry.filename not in additions:
+                data = source.read(entry.filename)
+                if entry.filename in brand_files:
+                    data = data.replace(b'Nightly', b'Sierra')
+                target.writestr(entry, data)
+        for name, data in additions.items():
+            target.writestr(name, data)
+    replacement.replace(omni)
 
 
 def build():
@@ -42,6 +72,7 @@ def build():
         contents = staged / 'Contents'
         # Use Mozilla's packaged layout: raw dist/Nightly.app is a developer
         # runtime and its resource roots differ when copied out of the tree.
+        add_zen_locales(contents / 'Resources/browser/omni.ja')
         with read_omni(contents / 'Resources/browser/omni.ja') as archive:
             module = archive.read('chrome/browser/content/browser/zen-components/BrowserConcept.mjs')
             stylesheet = archive.read('chrome/browser/content/browser/zen-styles/browser-concept.css')

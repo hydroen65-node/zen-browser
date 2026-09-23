@@ -44,3 +44,17 @@ Not exercised this pass: physical shake, reduced-motion setting, narrow window, 
 Independent code review corrections: collapse the URL container only in its resting state so native focused/open/breakout sizing remains available; mark the dock with a stable ID and `skipintoolbarset=true` so Zen toolbar customization does not treat it as a widget. Both corrections are rebuilt; final native interaction verification remains pending.
 
 Source packaging follow-up: `./mach package` succeeded, creating the official omni layout and local DMG. The source builder now requires `dist/zen/Nightly.app` and verifies the concept files inside `browser/omni.ja` against the checkout. Corrected Sierra Source assembly and deep signature verification pass. The first localization failure was in the earlier raw developer-tree copy. The corrected package's runtime localization is still unverified because the Mac is locked; do not claim it fixed from packaging success alone.
+
+# Native source and tool validation — 2026-09-23
+
+The Mac was unlocked for this pass. The isolated Sierra Dev browser was resized to a 1410px-wide screen and inspected on the real MDN WebExtensions documentation page. Clicking beside the visible black notch, inside its expanded transparent target, opened the shelf. A saved task requested permission before reading that active tab; accepting produced a `browser.page.snapshot` event with 4,283 characters and a bounded preview. The panel correctly said that the model was not connected. The tab claim was released when the read ended.
+
+The isolated Sierra Source app was rebuilt from the full Firefox/Zen source package with missing Zen Fluent strings added to its own `browser/omni.ja`. Native labels returned. MDN navigation, agent task creation and saving, the read-only consent dialog, the completed tool event and the open notch were verified in that source-built app. The source-built app passed strict deep signature verification during assembly. The normal installed Zen app and its profile were not changed.
+
+Fourteen offline tests pass, including rejection of unknown tool names, denied consent, changed context during consent or page read, and bounded text-only actor results. Python syntax and diff checks pass. No live AI/model calls or cloud builds were made.
+
+Design review compared the native source screenshot with the 1410 × 825 closed/open targets and the supplied Supaste shelf. Native evidence is in `design/native-closed-source-2026-09-23.jpg`, `design/native-agent-source-2026-09-23.jpg`, and final `design/native-empty-source-2026-09-23.jpg`, `design/native-populated-source-2026-09-23.jpg`, `design/native-folder-source-2026-09-23.jpg`. The empty notch's tall void was corrected and re-rendered. The populated shelf shows a real MDN favicon and a folder; opening the folder stays inside the notch and shows breadcrumbs. The current live MDN page includes its own navigation and ads, which the browser chrome does not replace.
+
+The final local package replaces visible in-window Nightly labels with Sierra. macOS still exposes Nightly as the application-menu name from compiled upstream branding; release branding is a remaining build task.
+
+Still unverified: physical shake without clicking, selection placement at several zoom levels, private and simultaneous windows, split view, compact mode and every upstream feature. Autonomous agent task execution, a model harness, background scheduling and credential brokering remain unimplemented.

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   ShakeDetector,
   AgentOwnership,
+  AgentToolGate,
   safeWebURL,
 } from "../../src/zen/concept/ConceptModel.sys.mjs";
 
@@ -74,4 +75,102 @@ test("repeated claims cannot bypass consent or move a claim across spaces", () =
   assert.throws(() => ownership.request("tab", "agent", "work"));
   ownership.allow("tab", "agent");
   ownership.assertAllowed("tab", "agent", "home");
+});
+
+test("browser tool asks once for active-tab control and releases it", async () => {
+  const ownership = new AgentOwnership();
+  const tab = {};
+  const calls = [];
+  const gate = new AgentToolGate(ownership, async (tool, candidate) => {
+    ownership.assertAllowed(candidate, "agent", "space");
+    calls.push(tool);
+    return { title: "Page", text: "Text" };
+  });
+  const result = await gate.invoke({
+    agentId: "agent",
+    spaceId: "space",
+    tab,
+    active: true,
+    tool: "browser.page.snapshot",
+    authorize: async () => {
+      calls.push("consent");
+      return true;
+    },
+    isCurrent: () => true,
+    onAuthorized: () => calls.push("working"),
+  });
+  assert.deepEqual(calls, ["consent", "working", "browser.page.snapshot"]);
+  assert.equal(result.status, "completed");
+  assert.throws(() => ownership.assertAllowed(tab, "agent", "space"));
+});
+
+test("browser tool denies work and rejects stale or unknown requests", async () => {
+  const ownership = new AgentOwnership();
+  let performed = 0;
+  const gate = new AgentToolGate(ownership, async () => {
+    performed++;
+  });
+  const base = {
+    agentId: "agent",
+    spaceId: "space",
+    tab: {},
+    active: true,
+    tool: "browser.page.snapshot",
+    authorize: async () => false,
+    isCurrent: () => true,
+  };
+  assert.equal((await gate.invoke(base)).status, "denied");
+  assert.equal(performed, 0);
+  await assert.rejects(() =>
+    gate.invoke({ ...base, tool: "browser.chrome.eval" }),
+  );
+  await assert.rejects(() => gate.invoke({ ...base, isCurrent: () => false }));
+  assert.equal(performed, 0);
+  assert.equal(ownership.tabs.size, 0);
+});
+
+test("browser tool rechecks context after consent", async () => {
+  const ownership = new AgentOwnership();
+  let current = true;
+  const gate = new AgentToolGate(ownership, async () =>
+    assert.fail("stale work"),
+  );
+  const tab = {};
+  await assert.rejects(() =>
+    gate.invoke({
+      agentId: "agent",
+      spaceId: "space",
+      tab,
+      active: true,
+      tool: "browser.page.snapshot",
+      authorize: async () => {
+        current = false;
+        return true;
+      },
+      isCurrent: () => current,
+    }),
+  );
+  assert.equal(ownership.tabs.size, 0);
+});
+
+test("browser tool discards a result when the page changes during the read", async () => {
+  const ownership = new AgentOwnership();
+  const tab = {};
+  let current = true;
+  const gate = new AgentToolGate(ownership, async () => {
+    current = false;
+    return { text: "Previous page" };
+  });
+  await assert.rejects(() =>
+    gate.invoke({
+      agentId: "agent",
+      spaceId: "space",
+      tab,
+      active: true,
+      tool: "browser.page.snapshot",
+      authorize: async () => true,
+      isCurrent: () => current,
+    }),
+  );
+  assert.equal(ownership.tabs.size, 0);
 });

@@ -104,3 +104,49 @@ export function safeWebURL(raw) {
     return null;
   }
 }
+
+/** A narrow gate between an untrusted task plan and privileged browser tools. */
+export class AgentToolGate {
+  constructor(ownership, perform) {
+    this.ownership = ownership;
+    this.perform = perform;
+  }
+  async invoke({
+    agentId,
+    spaceId,
+    tab,
+    active,
+    tool,
+    authorize,
+    isCurrent,
+    onAuthorized,
+  }) {
+    if (tool !== "browser.page.snapshot")
+      throw new Error("Unknown browser tool");
+    if (
+      !agentId ||
+      !spaceId ||
+      !tab ||
+      typeof authorize !== "function" ||
+      typeof isCurrent !== "function"
+    )
+      throw new Error("Invalid tool context");
+    if (!isCurrent()) throw new Error("Page context changed");
+    const claim = this.ownership.request(tab, agentId, spaceId, { active });
+    try {
+      if (claim.state === "awaiting-permission") {
+        if (!(await authorize())) return { status: "denied" };
+        if (!isCurrent()) throw new Error("Page context changed");
+        this.ownership.allow(tab, agentId);
+      }
+      this.ownership.assertAllowed(tab, agentId, spaceId);
+      if (!isCurrent()) throw new Error("Page context changed");
+      onAuthorized?.();
+      const result = await this.perform(tool, tab);
+      if (!isCurrent()) throw new Error("Page context changed");
+      return { status: "completed", result };
+    } finally {
+      this.ownership.reclaim(tab);
+    }
+  }
+}
